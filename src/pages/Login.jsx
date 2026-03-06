@@ -80,52 +80,86 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      {apiError && (
-        <div className="auth-api-error">
-          {apiError}
+    <div className="auth-page">
+      <div className="auth-hero">
+        <div className="auth-hero-overlay"></div>
+        <div className="container">
+          <div className="auth-hero-content">
+            <h1 className="auth-hero-title">Добро пожаловать!</h1>
+            <p className="auth-hero-subtitle">
+              Войдите в свой аккаунт, чтобы быть в курсе всех событий
+            </p>
+          </div>
         </div>
-      )}
-
-      <InputField
-        type="email"
-        label="Email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-        error={errors.email}
-        placeholder="example@mail.com"
-        icon="📧"
-        required
-        autoComplete="email"
-      />
-
-      <InputField
-        type="password"
-        label="Пароль"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        error={errors.password}
-        placeholder="Введите пароль"
-        icon="🔒"
-        required
-        autoComplete="current-password"
-      />
-
-      <div className="auth-links">
-        <Link to="/register" className="auth-link">
-          Нет аккаунта? Зарегистрироваться
-        </Link>
-        <Link to="/forgot-password" className="auth-link">
-          Забыли пароль?
-        </Link>
       </div>
 
-      <SubmitButton loading={loading}>
-        Войти
-      </SubmitButton>
-    </form>
+      <div className="auth-section">
+        <div className="container">
+          <div className="auth-card">
+            <div className="auth-card-header">
+              <h2 className="auth-card-title">Вход в систему</h2>
+              <div className="auth-card-divider"></div>
+            </div>
+
+            <div className="auth-card-body">
+              <form onSubmit={handleSubmit} className="auth-form">
+                {apiError && (
+                  <div className="auth-error-message">
+                    <span className="auth-error-icon">⚠️</span>
+                    {apiError}
+                  </div>
+                )}
+
+                <InputField
+                  type="email"
+                  label="Email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  placeholder="example@mail.com"
+                  icon="📧"
+                  required
+                  autoComplete="email"
+                />
+
+                <InputField
+                  type="password"
+                  label="Пароль"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  placeholder="Введите пароль"
+                  icon="🔒"
+                  required
+                  autoComplete="current-password"
+                />
+
+                <div className="auth-links">
+                  <Link to="/register" className="auth-link auth-link-primary">
+                    Нет аккаунта? Зарегистрироваться
+                  </Link>
+                  <Link to="/forgot-password" className="auth-link auth-link-secondary">
+                    Забыли пароль?
+                  </Link>
+                </div>
+
+                <SubmitButton loading={loading}>
+                  Войти
+                </SubmitButton>
+              </form>
+            </div>
+
+            <div className="auth-card-footer">
+              <Link to="/" className="auth-home-link">
+                ← Вернуться на главную
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

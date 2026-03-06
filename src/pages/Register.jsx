@@ -91,69 +91,108 @@ const Register = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      {apiError && (
-        <div className="auth-api-error">
-          {apiError}
+    <div className="auth-page">
+      <div className="auth-hero">
+        <div className="auth-hero-overlay"></div>
+        <div className="container">
+          <div className="auth-hero-content">
+            <h1 className="auth-hero-title">Присоединяйтесь к нам!</h1>
+            <p className="auth-hero-subtitle">
+              Станьте частью сообщества ветеранов и получайте актуальные новости
+            </p>
+          </div>
         </div>
-      )}
-
-      <InputField
-        type="email"
-        label="Email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-        error={errors.email}
-        placeholder="example@mail.com"
-        icon="📧"
-        required
-        autoComplete="email"
-      />
-
-      <InputField
-        type="password"
-        label="Пароль"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        error={errors.password}
-        placeholder="Минимум 6 символов"
-        icon="🔒"
-        required
-        autoComplete="new-password"
-      />
-
-      <InputField
-        type="password"
-        label="Подтверждение пароля"
-        name="confirmPassword"
-        value={formData.confirmPassword}
-        onChange={handleChange}
-        error={errors.confirmPassword}
-        placeholder="Повторите пароль"
-        icon="🔒"
-        required
-        autoComplete="new-password"
-      />
-
-      <div className="auth-terms">
-        <input type="checkbox" id="terms" required />
-        <label htmlFor="terms">
-          Я принимаю условия использования и политику конфиденциальности
-        </label>
       </div>
 
-      <div className="auth-links">
-        <Link to="/login" className="auth-link">
-          Уже есть аккаунт? Войти
-        </Link>
-      </div>
+      <div className="auth-section">
+        <div className="container">
+          <div className="auth-card">
+            <div className="auth-card-header">
+              <h2 className="auth-card-title">Регистрация</h2>
+              <div className="auth-card-divider"></div>
+              <p className="auth-card-subtitle">
+                Создайте аккаунт, чтобы участвовать в жизни сообщества
+              </p>
+            </div>
 
-      <SubmitButton loading={loading}>
-        Зарегистрироваться
-      </SubmitButton>
-    </form>
+            <div className="auth-card-body">
+              <form onSubmit={handleSubmit} className="auth-form">
+                {apiError && (
+                  <div className="auth-error-message">
+                    <span className="auth-error-icon">⚠️</span>
+                    {apiError}
+                  </div>
+                )}
+
+                <InputField
+                  type="email"
+                  label="Email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  placeholder="example@mail.com"
+                  icon="📧"
+                  required
+                  autoComplete="email"
+                />
+
+                <InputField
+                  type="password"
+                  label="Пароль"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  placeholder="Минимум 6 символов"
+                  icon="🔒"
+                  required
+                  autoComplete="new-password"
+                  helperText="Пароль должен содержать заглавные, строчные буквы и цифры"
+                />
+
+                <InputField
+                  type="password"
+                  label="Подтверждение пароля"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                  placeholder="Повторите пароль"
+                  icon="🔒"
+                  required
+                  autoComplete="new-password"
+                />
+
+                <div className="auth-terms">
+                  <input type="checkbox" id="terms" required />
+                  <label htmlFor="terms">
+                    Я принимаю <Link to="/terms" className="auth-terms-link">условия использования</Link> и{' '}
+                    <Link to="/privacy" className="auth-terms-link">политику конфиденциальности</Link>
+                  </label>
+                </div>
+
+                <div className="auth-links">
+                  <Link to="/login" className="auth-link auth-link-primary">
+                    Уже есть аккаунт? Войти
+                  </Link>
+                </div>
+
+                <SubmitButton loading={loading}>
+                  Зарегистрироваться
+                </SubmitButton>
+              </form>
+            </div>
+
+            <div className="auth-card-footer">
+              <Link to="/" className="auth-home-link">
+                ← Вернуться на главную
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

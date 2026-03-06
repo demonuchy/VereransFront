@@ -1,8 +1,8 @@
-// components/Auth/InputField.jsx
+// components/InputField.jsx
 import React from 'react';
 
 const InputField = ({
-  type = 'text',
+  type,
   label,
   name,
   value,
@@ -10,14 +10,19 @@ const InputField = ({
   error,
   placeholder,
   icon,
-  required = false,
+  required,
   autoComplete,
+  helperText
 }) => {
   return (
-    <div className="auth-input-group">
-      {label && <label htmlFor={name} className="auth-label">{label}</label>}
-      <div className="auth-input-wrapper">
-        {icon && <span className="auth-input-icon">{icon}</span>}
+    <div className="input-field-wrapper">
+      {label && (
+        <label htmlFor={name} className="input-label">
+          {label} {required && <span className="required">*</span>}
+        </label>
+      )}
+      <div className="input-container">
+        {icon && <span className="input-icon">{icon}</span>}
         <input
           type={type}
           id={name}
@@ -25,12 +30,12 @@ const InputField = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          required={required}
+          className={error ? 'error' : ''}
           autoComplete={autoComplete}
-          className={`auth-input ${icon ? 'with-icon' : ''} ${error ? 'error' : ''}`}
         />
       </div>
-      {error && <span className="auth-error">{error}</span>}
+      {error && <div className="input-error">{error}</div>}
+      {helperText && !error && <div className="auth-helper-text">{helperText}</div>}
     </div>
   );
 };

@@ -1,19 +1,19 @@
-// components/Auth/SubmitButton.jsx
+// components/SubmitButton.jsx
 import React from 'react';
 
-const SubmitButton = ({ children, loading = false, disabled = false}) => {
+const SubmitButton = ({ loading, children }) => {
   return (
-    <button
-      type="submit"
-      className="auth-submit-button"
-      disabled={disabled || loading}
+    <button 
+      type="submit" 
+      className={`submit-button ${loading ? 'loading' : ''}`}
+      disabled={loading}
     >
       {loading ? (
-        <span className="auth-button-loader">
-          <span className="loader-dot"></span>
-          <span className="loader-dot"></span>
-          <span className="loader-dot"></span>
-        </span>
+        <div className="auth-button-loader">
+          <div className="loader-dot"></div>
+          <div className="loader-dot"></div>
+          <div className="loader-dot"></div>
+        </div>
       ) : (
         children
       )}
