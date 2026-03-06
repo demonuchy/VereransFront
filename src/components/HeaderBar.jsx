@@ -1,10 +1,11 @@
+// components/HeaderBar.jsx
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 
 const HeaderBar = () => {
   const images = [
     'orig.jpg',
-    'orig1.jpg' // Замените на ваши изображения
+    'orig1.jpg'
   ];
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -20,14 +21,13 @@ const HeaderBar = () => {
         );
         setIsTransitioning(false);
       }, 1000);
-    }, 10000); // Меняем каждые 5 секунд (для теста)
+    }, 10000);
     return () => clearInterval(interval);
   }, [images.length]);
 
-
   return (
     <div className="header-bar">
-        <Logo />
+      <Logo />
       <div className="slideshow-container">
         {images.map((src, index) => (
           <div 
@@ -43,7 +43,15 @@ const HeaderBar = () => {
             />
           </div>
         ))}
-        {/* Таймер прогресса */}
+        {/* Прогресс-бар для слайдшоу */}
+        <div className="slideshow-progress">
+          <div 
+            className="slideshow-progress-bar" 
+            style={{ 
+              width: `${((currentImageIndex + 1) / images.length) * 100}%` 
+            }}
+          ></div>
+        </div>
       </div>
     </div>
   );

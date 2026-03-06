@@ -146,51 +146,50 @@ function Home() {
             </section>
 
             {/* Секция с новостями */}
-            <section className="home-news-section">
-                <div className="container">
-                    {/* Режим редактирования индикатор */}
-                    {editMode && (user?.role === "admin" || user?.role === "root") && (
-                        <div className="edit-mode-banner">
-                            <span className="edit-mode-icon">✎</span>
-                            <span className="edit-mode-text">Режим редактирования активен</span>
-                            <span className="edit-mode-hint">Дважды кликните для выхода</span>
-                        </div>
-                    )}
-
-                    {/* Сетка новостей */}
-                    <div 
-                        className={`news-grid ${editMode ? 'edit-mode' : ''}`}
-                        onDoubleClick={doubleClickHandler}
-                    >
-                        {news?.map((item, index) => (
-                            <div key={item.id} className="news-grid-item">
-                                <NewsCard
-                                    id={item.id}
-                                    title={item.title}
-                                    date={item.created_at}
-                                    image={item.images?.[0]?.base64 || null}
-                                    editMode={editMode && (user?.role === "admin" || user?.role === "root")}
-                                    onDelete={handleDeleteNews}
-                                />
-                            </div>
-                        ))}  
-                        
-                        {/* Кнопка создания новости в режиме редактирования */}
-                        {((user?.role === "admin" || user?.role === "root") && editMode) && (
-                            <div className="news-grid-item create-card">
-                                <button 
-                                    className="create-news-card"
-                                    onClick={() => setIsModalOpen(true)}
-                                >
-                                    <div className="create-news-icon">+</div>
-                                    <span className="create-news-text">Создать новость</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
+            <section className="home-news-section"  
+            onDoubleClick={doubleClickHandler}>
+            <div className="container-news">
+                {/* Режим редактирования индикатор */}
+                {editMode && (user?.role === "admin" || user?.role === "root") && (
+                <div className="edit-mode-banner">
+                    <span className="edit-mode-icon">✎</span>
+                    <span className="edit-mode-text">Режим редактирования активен</span>
+                    <span className="edit-mode-hint">Дважды кликните для выхода</span>
                 </div>
-            </section>
+                )}
 
+                {/* Сетка новостей */}
+                <div 
+                className={`news-grid ${editMode ? 'edit-mode' : ''}`}
+                >
+                {news?.map((item, index) => (
+                    <div key={item.id} className="news-grid-item">
+                    <NewsCard
+                        id={item.id}
+                        title={item.title}
+                        date={item.created_at}
+                        image={item.images?.[0]?.base64 || null}
+                        editMode={editMode && (user?.role === "admin" || user?.role === "root")}
+                        onDelete={handleDeleteNews}
+                    />
+                    </div>
+                ))}  
+                
+                {/* Кнопка создания новости в режиме редактирования */}
+                {((user?.role === "admin" || user?.role === "root") && editMode) && (
+                    <div className="news-grid-item create-card">
+                    <button 
+                        className="create-news-card"
+                        onClick={() => setIsModalOpen(true)}
+                    >
+                        <div className="create-news-icon">+</div>
+                        <span className="create-news-text">Создать новость</span>
+                    </button>
+                    </div>
+                )}
+                </div>
+            </div>
+            </section>
             {/* Модальное окно создания новости */}
             <NewsModalBuilder
                 isOpen={isModalOpen}

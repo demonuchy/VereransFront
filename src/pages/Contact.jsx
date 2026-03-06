@@ -1,56 +1,6 @@
-import React, { useState } from 'react';
-
+import React from 'react';
 
 const Contacts = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
-  });
-
-  const [formStatus, setFormStatus] = useState({
-    submitted: false,
-    success: false,
-    message: ''
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Здесь логика отправки формы
-    console.log('Form submitted:', formData);
-    setFormStatus({
-      submitted: true,
-      success: true,
-      message: 'Сообщение успешно отправлено! Мы свяжемся с вами в ближайшее время.'
-    });
-    
-    // Очистка формы через 3 секунды
-    setTimeout(() => {
-      setFormStatus({
-        submitted: false,
-        success: false,
-        message: ''
-      });
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      });
-    }, 5000);
-  };
-
   const contacts = [
     {
       icon: '📍',
@@ -96,7 +46,7 @@ const Contacts = () => {
   const faqItems = [
     {
       question: 'Как записаться на прием?',
-      answer: 'Вы можете записаться по телефону +7 (495) 123-45-67 или через форму обратной связи на сайте.'
+      answer: 'Вы можете записаться по телефону +7 (495) 123-45-67.'
     },
     {
       question: 'Какие документы нужны для консультации?',
@@ -140,154 +90,50 @@ const Contacts = () => {
         </div>
       </section>
 
-      {/* Карта и форма */}
-      <section className="map-form-section">
+      {/* Карта */}
+      <section className="map-section">
         <div className="container">
-          <div className="map-form-grid">
-            <div className="map-container">
-              <div className="map-placeholder">
-                <iframe
-                  title="Карта проезда"
-                  src="https://yandex.ru/map-widget/v1/?ll=37.617494%2C55.750625&z=12"
-                  width="100%"
-                  height="400"
-                  frameBorder="0"
-                  allowFullScreen
-                ></iframe>
+          <div className="map-container-large">
+            <div className="section-header">
+              <h2 className="section-title">Как нас найти</h2>
+              <div className="section-divider"></div>
+            </div>
+            
+            <div className="map-wrapper">
+              <iframe
+                title="Карта проезда"
+                src="https://yandex.ru/map-widget/v1/?ll=37.617494%2C55.750625&z=12"
+                width="100%"
+                height="450"
+                frameBorder="0"
+                allowFullScreen
+              ></iframe>
+            </div>
+            
+            <div className="map-info-detailed">
+              <div className="map-info-item">
+                <span className="map-info-icon-large">🚇</span>
+                <div className="map-info-content">
+                  <h4 className="map-info-item-title">Метро</h4>
+                  <p className="map-info-item-text">м. Парк Победы, выход №3, далее 5 минут пешком</p>
+                </div>
               </div>
               
-              <div className="map-info">
-                <h4 className="map-info-title">Как добраться</h4>
-                <p className="map-info-text">
-                  <span className="map-info-icon">🚇</span> 
-                  м. Парк Победы, выход №3, далее 5 минут пешком
-                </p>
-                <p className="map-info-text">
-                  <span className="map-info-icon">🚌</span> 
-                  Автобусы № 42, 73, ост. "Дом ветеранов"
-                </p>
-                <p className="map-info-text">
-                  <span className="map-info-icon">🚗</span> 
-                  Парковка доступна по ул. Ветеранов
-                </p>
+              <div className="map-info-item">
+                <span className="map-info-icon-large">🚌</span>
+                <div className="map-info-content">
+                  <h4 className="map-info-item-title">Автобус</h4>
+                  <p className="map-info-item-text">Автобусы № 42, 73, ост. "Дом ветеранов"</p>
+                </div>
               </div>
-            </div>
-
-            <div className="form-container">
-              <h3 className="form-title">Напишите нам</h3>
-              <p className="form-subtitle">
-                Заполните форму и мы свяжемся с вами в ближайшее время
-              </p>
-
-              {formStatus.submitted && formStatus.success && (
-                <div className="form-success">
-                  {formStatus.message}
+              
+              <div className="map-info-item">
+                <span className="map-info-icon-large">🚗</span>
+                <div className="map-info-content">
+                  <h4 className="map-info-item-title">Автомобиль</h4>
+                  <p className="map-info-item-text">Парковка доступна по ул. Ветеранов</p>
                 </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="contact-form">
-                <div className="form-group">
-                  <label htmlFor="name" className="form-label">
-                    Ваше имя <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                    placeholder="Иванов Иван Иванович"
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="email" className="form-label">
-                      Email <span className="required">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="form-input"
-                      required
-                      placeholder="ivanov@mail.ru"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="phone" className="form-label">
-                      Телефон
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="form-input"
-                      placeholder="+7 (999) 123-45-67"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="subject" className="form-label">
-                    Тема обращения <span className="required">*</span>
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    className="form-select"
-                    required
-                  >
-                    <option value="">Выберите тему</option>
-                    <option value="consultation">Запись на консультацию</option>
-                    <option value="help">Нужна помощь</option>
-                    <option value="volunteer">Хочу стать волонтером</option>
-                    <option value="suggestion">Предложение сотрудничества</option>
-                    <option value="question">Вопрос о деятельности</option>
-                    <option value="other">Другое</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="message" className="form-label">
-                    Сообщение <span className="required">*</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    className="form-textarea"
-                    required
-                    placeholder="Опишите ваш вопрос или проблему..."
-                    rows="5"
-                  />
-                </div>
-
-                <div className="form-checkbox">
-                  <input type="checkbox" id="consent" required />
-                  <label htmlFor="consent">
-                    Я согласен на обработку персональных данных
-                  </label>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="form-submit-button"
-                  disabled={formStatus.submitted}
-                >
-                  {formStatus.submitted ? 'Отправляется...' : 'Отправить сообщение'}
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         </div>
