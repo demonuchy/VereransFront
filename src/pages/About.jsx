@@ -46,10 +46,6 @@ const About = () => {
             <p className="about-hero-subtitle">
               Сохраняя память, воспитывая будущее, заботясь о настоящем
             </p>
-            <div className="about-hero-buttons">
-              <button className="about-button-primary">Наши достижения</button>
-              <button className="about-button-secondary">Стать частью команды</button>
-            </div>
           </div>
         </div>
       </section>

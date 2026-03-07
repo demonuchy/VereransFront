@@ -37,24 +37,52 @@ const Contacts = () => {
   ];
 
   const socials = [
-    { name: 'ВКонтакте', icon: 'В', url: 'https://vk.com' },
-    { name: 'Telegram', icon: '📱', url: 'https://t.me' },
-    { name: 'Одноклассники', icon: 'О', url: 'https://ok.ru' },
-    { name: 'YouTube', icon: '▶️', url: 'https://youtube.com' }
+    { 
+      name: 'ВКонтакте', 
+      icon: 'fab fa-vk', 
+      url: 'https://vk.com/sovetveteranov',
+      color: '#4C75A3'
+    },
+    { 
+      name: 'Telegram', 
+      icon: 'fab fa-telegram-plane', 
+      url: 'https://t.me/sovetveteranov',
+      color: '#0088cc'
+    },
+    { 
+      name: 'Одноклассники', 
+      icon: 'fab fa-odnoklassniki', 
+      url: 'https://ok.ru/sovetveteranov',
+      color: '#EE8208'
+    },
+    { 
+      name: 'Viber', 
+      icon: 'fab fa-viber', 
+      url: 'viber://chat?number=74951234567',
+      color: '#7360F2'
+    }
   ];
 
   const faqItems = [
     {
       question: 'Как записаться на прием?',
-      answer: 'Вы можете записаться по телефону +7 (495) 123-45-67.'
+      answer: 'Вы можете записаться по телефону +7 (495) 123-45-67 или через форму обратной связи на нашем сайте.'
     },
     {
       question: 'Какие документы нужны для консультации?',
-      answer: 'При себе необходимо иметь паспорт и удостоверение ветерана (при наличии).'
+      answer: 'При себе необходимо иметь паспорт и удостоверение ветерана (при наличии). Для социальных вопросов также могут потребоваться дополнительные документы.'
     },
     {
       question: 'Проводите ли вы выездные консультации?',
-      answer: 'Да, для маломобильных ветеранов мы организуем выездные консультации на дом.'
+      answer: 'Да, для маломобильных ветеранов мы организуем выездные консультации на дом. Для этого необходимо предварительно согласовать визит по телефону.'
+    },
+    {
+      question: 'Есть ли льготы для ветеранов?',
+      answer: 'Мы предоставляем полную информацию о всех доступных льготах и помогаем с оформлением необходимых документов.'
+    },
+    {
+      question: 'Как стать волонтером?',
+      answer: 'Заполните анкету в разделе "Волонтерство" на нашем сайте или свяжитесь с нами по телефону.'
     }
   ];
 
@@ -158,8 +186,9 @@ const Contacts = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="social-card"
+                style={{ '--social-color': social.color }}
               >
-                <div className="social-icon">{social.icon}</div>
+                <i className={social.icon}></i>
                 <span className="social-name">{social.name}</span>
               </a>
             ))}

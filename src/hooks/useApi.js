@@ -133,10 +133,88 @@ const useApi = () => {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Failed to fetch news');
+      throw new Error(error.message || 'Failed to delete news');
     }
 
     return await response.json();
+  }, [getHeaders]);
+
+  // Новый метод для обновления новости
+  const updateNewsById = useCallback(async (newsId, title, body, images = [], accessToken) => {
+    try {
+      console.log('🔄 Updating news with ID:', newsId);
+      
+      const formData = new FormData();
+      
+      // Добавляем title и body как обязательные поля
+      // В Python backend они определены как Optional, но мы все равно отправляем
+      if (title) {
+        formData.append('title', title);
+      }
+      
+      if (body) {
+        formData.append('body', body);
+      }
+      
+      // Добавляем изображения, если они есть
+      if (images && images.length > 0) {
+        images.forEach((image) => {
+          formData.append('images', image);
+        });
+        console.log(`📸 Adding ${images.length} new images`);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/news/${newsId}`, {
+        method: 'PATCH',
+        headers: getHeaders(accessToken), // Не устанавливаем Content-Type, браузер сам установит с boundary для FormData
+        body: formData,
+      });
+
+      // Проверяем статус ответа
+      if (!response.ok) {
+        let errorMessage = 'Failed to update news';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorMessage;
+        } catch {
+          // Если не удалось распарсить JSON, пробуем получить текст
+          try {
+            const errorText = await response.text();
+            if (errorText) errorMessage = errorText;
+          } catch {
+            // Игнорируем
+          }
+        }
+        
+        console.error('❌ Update news failed:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          message: errorMessage 
+        });
+        
+        throw new Error(errorMessage);
+      }
+
+      // Пытаемся распарсить ответ
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch {
+        // Если ответ не в JSON, возвращаем успешный статус
+        responseData = { 
+          success: true, 
+          message: 'News updated successfully',
+          id: newsId 
+        };
+      }
+
+      console.log('✅ News updated successfully:', responseData);
+      return responseData;
+
+    } catch (error) {
+      console.error('❌ Error in updateNewsById:', error);
+      throw error;
+    }
   }, [getHeaders]);
 
   const register = useCallback(async (username, password) => {
@@ -235,9 +313,10 @@ const useApi = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
-        headers: getHeaders(refreshToken, {
+        headers: getHeaders(null, { // Не передаем accessToken для refresh
           'Content-Type': 'application/json',
         }),
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
       const data = await response.json();
@@ -281,6 +360,7 @@ const useApi = () => {
     getAllNews,
     getNewsById,
     deleteNewsById,
+    updateNewsById, // Новый метод
     register,
     login,
     getMe,

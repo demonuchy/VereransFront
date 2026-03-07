@@ -1,5 +1,5 @@
 /* ============================================================================
-   CSS Variables (Цветовая схема)
+   CSS Variables (Цветовая схема)  button-loader modal-loading load--container
    ============================================================================ */
    :root {
     /* Основные цвета header-bar*/
@@ -939,9 +939,6 @@
     transform: translateY(0) scale(0.98);
     background: rgba(211, 47, 47, 0.25);
   }
-  /* ============================================================================
-   Home Page
-   ============================================================================ */
 /* ============================================================================
    Home Page
    ============================================================================ */
@@ -1410,8 +1407,40 @@
     justify-content: center;
     align-items: flex-end;
   }
+
+  .news-card-edit{
+    opacity: 0;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    font-weight: 600;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--btn-primary);
+    z-index: 100;
+    top: -10px;
+    right: 35px;
+  }
+
+  .news-card-edit span {color: white;}
+  
+  .news-card-edit:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px var(--btn-primary-hover);
+    transition: all 0.1s linear;
+  }
+
+  .news-card-edit.visible{
+    opacity: 1;
+    transition: all 0.3s linear;
+  }
   
   .news-card-remove {
+    opacity: 0;
     position: absolute;
     display: flex;
     justify-content: center;
@@ -1434,6 +1463,11 @@
     transition: all 0.1s linear;
   }
   
+  .news-card-remove.visible{
+    opacity: 1;
+    transition: all 0.3s linear;
+  }
+
   .remove-icon {
     display: flex;
     flex-direction: column;
@@ -1904,6 +1938,14 @@
     box-sizing: border-box;
     border-radius: 12px 12px 0 0;
   }
+
+  .modal-loading{
+    display: flex;
+    justify-content:  center;
+    align-items: center;
+    min-height: 300px;
+  }
+
   
   .modal-form {
     position: relative;
@@ -2067,6 +2109,139 @@
   .save-button:hover {
     background: var(--bg-dark);
   }
+
+  /* ============================================================================
+   Modal Builder Loading State
+   ============================================================================ */
+
+  
+.button-loader {
+  display: inline-block;
+  position: relative;
+}
+
+.button-loader::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: -35px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-right-color: white;
+  border-radius: 50%;
+  animation: dual-spin 0.8s linear infinite;
+}
+
+.save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+ Edit Mode Enhancements social-card
+ ============================================================================ */
+
+
+.edit-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.news-card-wrapper.edit-mode-active .news-card {
+  outline: 2px solid var(--btn-secondary);
+  outline-offset: 2px;
+}
+
+.edit-mode-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(52, 152, 219, 0.1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================================================
+ Required Field Indicator
+ ============================================================================ */
+.required {
+  color: var(--secondary-color);
+  margin-left: 4px;
+}
+
+/* ============================================================================
+ Section Labels
+ ============================================================================ */
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.existing-images-section,
+.new-images-section {
+  margin-bottom: 20px;
+}
+
+/* ============================================================================
+ Image Previews Enhancement
+ ============================================================================ */
+.image-preview.existing {
+  border: 2px solid var(--btn-secondary);
+}
+
+.image-preview.new {
+  border: 2px solid var(--btn-primary);
+}
+
+.image-preview {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color);
+  font-size: 18px;
+  transition: var(--transition);
+}
+
+.remove-image:hover:not(:disabled) {
+  background: var(--secondary-color);
+  color: white;
+  transform: scale(1.1);
+}
+
+.remove-image:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
   
   /* ============================================================================
      Empty State
@@ -2153,7 +2328,7 @@
     justify-content: center;
     align-items: center;
     background: var(--bg-light);
-    z-index: 900;
+    z-index: 2000;
   }
   
   .spinner {
@@ -2943,6 +3118,56 @@
     font-weight: 800;
     font-size: 20px;
   }
+
+  /* ============================================================================
+   Social Icons Enhancement
+   ============================================================================ */
+.social-card i {
+  font-size: 40px;
+  transition: var(--transition);
+}
+
+.social-card:hover i {
+  transform: scale(1.1);
+}
+
+.social-card {
+  --social-color: #333;
+}
+
+.social-card:hover i {
+  color: var(--social-color);
+}
+
+/* Индивидуальные цвета для каждой соцсети */
+.social-card:nth-child(1):hover i { color: #4C75A3; } /* VK */
+.social-card:nth-child(2):hover i { color: #0088cc; } /* Telegram */
+.social-card:nth-child(3):hover i { color: #EE8208; } /* OK */
+.social-card:nth-child(4):hover i { color: #7360F2; } /* Viber */
+
+/* ============================================================================
+   FAQ Grid Enhancement  button-loader
+   ============================================================================ */
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 1024px) {
+  .faq-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+}
   
   .faq-answer {
     color: var(--text-muted);

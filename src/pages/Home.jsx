@@ -1,5 +1,5 @@
 // pages/Home.jsx
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import NewsCard from "../components/NewsCard";
 import NewsModalBuilder from "../components/NewsModalBuilder";
 import LoadScreen from "../components/LoadScreen";
@@ -9,14 +9,23 @@ import { useAuth } from '../hooks/useAuthContext';
 function Home() {
     const [news, setNews] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { createNews, getAllNews, deleteNewsById } = useApi();
+    const [modalMode, setModalMode] = useState('create');
+    const [editingNewsId, setEditingNewsId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { createNews, getAllNews, deleteNewsById, updateNewsById } = useApi();
     const [editMode, setEditMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
     const { user, loading } = useAuth();
     
-    const fetchNews = useCallback(async () => {
-        try {
+    const isFirstLoad = useRef(true);
+
+    const fetchNews = useCallback(async (showLoader = true) => {
+        if (showLoader && !initialLoadComplete) {
             setIsLoading(true);
+        }
+        
+        try {
             const response = await getAllNews();
             setNews(response.data.news);
         } catch (err) {
@@ -24,13 +33,26 @@ function Home() {
             setNews([]);
         } finally {
             setIsLoading(false);
+            setInitialLoadComplete(true);
         }
-    }, [getAllNews]); 
+    }, [getAllNews, initialLoadComplete]);
 
     useEffect(() => {
-        fetchNews();
-        setIsLoading(loading);
-    }, [fetchNews, loading]);
+        const loadInitialData = async () => {
+            if (isFirstLoad.current) {
+                isFirstLoad.current = false;
+                await fetchNews(true);
+            }
+        };
+        
+        loadInitialData();
+    }, [fetchNews]);
+
+    useEffect(() => {
+        if (!loading && !initialLoadComplete && isFirstLoad.current) {
+            fetchNews(true);
+        }
+    }, [loading, initialLoadComplete, fetchNews]);
 
     const doubleClickHandler = useCallback((e) => {
         if (e.target.closest('button')) return;
@@ -39,43 +61,76 @@ function Home() {
 
     const handleSaveNews = useCallback(async (newsData) => {
         try {
-            setIsLoading(true);
-            await createNews(
-                newsData.title, 
-                newsData.content, 
-                newsData.images, 
-                localStorage.getItem('accessToken')
-            );
-            await fetchNews();
+            setIsSubmitting(true);
+            
+            if (newsData.mode === 'edit') {
+                await updateNewsById(
+                    newsData.id,
+                    newsData.title,
+                    newsData.content,
+                    newsData.newImages,
+                    localStorage.getItem('accessToken')
+                );
+                console.log('News updated successfully');
+            } else {
+                await createNews(
+                    newsData.title,
+                    newsData.content,
+                    newsData.newImages,
+                    localStorage.getItem('accessToken')
+                );
+                console.log('News created successfully');
+            }
+            
+            await fetchNews(false);
+            
             setIsModalOpen(false);
+            setEditingNewsId(null);
+            setModalMode('create');
         } catch (error) {
             console.error('Error saving news:', error);
+            alert('Произошла ошибка при сохранении новости');
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
-    }, [createNews, fetchNews]);
+    }, [createNews, updateNewsById, fetchNews]);
 
     const handleDeleteNews = useCallback(async (newsId) => {
         try {
-            setIsLoading(true);
             await deleteNewsById(newsId, localStorage.getItem('accessToken'));
             setNews(prevNews => prevNews.filter(item => item.id !== newsId));
         } catch (error) {
             console.error('Error deleting news:', error);
+            await fetchNews(false);
             throw error;
-        } finally {
-            setIsLoading(false);
         }
-    }, [deleteNewsById]);
+    }, [deleteNewsById, fetchNews]);
 
-    if (isLoading && !news) {
+    const handleEditNews = useCallback((newsId) => {
+        setEditingNewsId(newsId);
+        setModalMode('edit');
+        setIsModalOpen(true);
+    }, []);
+
+    const handleCloseModal = useCallback(() => {
+        setIsModalOpen(false);
+        setEditingNewsId(null);
+        setModalMode('create');
+    }, []);
+
+    const handleOpenCreateModal = useCallback(() => {
+        setModalMode('create');
+        setEditingNewsId(null);
+        setIsModalOpen(true);
+    }, []);
+
+    if (isLoading && !initialLoadComplete) {
         return <LoadScreen />;
     }
 
     if (news?.length === 0) {
         return (
             <div className="home-page">
-                {/* Герой секция для пустого состояния */}
                 <section className="home-hero">
                     <div className="home-hero-overlay"></div>
                     <div className="container">
@@ -102,7 +157,7 @@ function Home() {
                             {(user?.role === "admin" || user?.role === "root") && (
                                 <button 
                                     className="empty-state-create-button"
-                                    onClick={() => setIsModalOpen(true)}
+                                    onClick={handleOpenCreateModal}
                                 >
                                     <span className="empty-state-button-icon">+</span>
                                     Создать первую новость
@@ -114,8 +169,11 @@ function Home() {
 
                 <NewsModalBuilder
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={handleCloseModal}
                     onSave={handleSaveNews}
+                    mode={modalMode}
+                    newsId={editingNewsId}
+                    isSubmitting={isSubmitting}
                 />
             </div>
         );
@@ -123,7 +181,6 @@ function Home() {
 
     return (
         <div className="home-page">
-            {/* Герой секция */}
             <section className="home-hero">
                 <div className="home-hero-overlay"></div>
                 <div className="container">
@@ -135,7 +192,7 @@ function Home() {
                         {((user?.role === "admin" || user?.role === "root") && editMode) && (
                             <button 
                                 className="home-hero-create-button"
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={handleOpenCreateModal}
                             >
                                 <span className="home-hero-button-icon">+</span>
                                 Создать новость
@@ -145,56 +202,53 @@ function Home() {
                 </div>
             </section>
 
-            {/* Секция с новостями */}
-            <section className="home-news-section"  
-            onDoubleClick={doubleClickHandler}>
-            <div className="container-news">
-                {/* Режим редактирования индикатор */}
-                {editMode && (user?.role === "admin" || user?.role === "root") && (
-                <div className="edit-mode-banner">
-                    <span className="edit-mode-icon">✎</span>
-                    <span className="edit-mode-text">Режим редактирования активен</span>
-                    <span className="edit-mode-hint">Дважды кликните для выхода</span>
-                </div>
-                )}
+            <section className="home-news-section" onDoubleClick={doubleClickHandler}>
+                <div className="container-news">
+                    {editMode && (user?.role === "admin" || user?.role === "root") && (
+                        <div className="edit-mode-banner">
+                            <span className="edit-mode-icon">✎</span>
+                            <span className="edit-mode-text">Режим редактирования активен</span>
+                            <span className="edit-mode-hint">Дважды кликните для выхода</span>
+                        </div>
+                    )}
 
-                {/* Сетка новостей */}
-                <div 
-                className={`news-grid ${editMode ? 'edit-mode' : ''}`}
-                >
-                {news?.map((item, index) => (
-                    <div key={item.id} className="news-grid-item">
-                    <NewsCard
-                        id={item.id}
-                        title={item.title}
-                        date={item.created_at}
-                        image={item.images?.[0]?.base64 || null}
-                        editMode={editMode && (user?.role === "admin" || user?.role === "root")}
-                        onDelete={handleDeleteNews}
-                    />
+                    <div className={`news-grid ${editMode ? 'edit-mode' : ''}`}>
+                        {news?.map((item) => (
+                            <div key={item.id} className="news-grid-item">
+                                <NewsCard
+                                    id={item.id}
+                                    title={item.title}
+                                    date={item.created_at}
+                                    image={item.images?.[0]?.base64 || null}
+                                    editMode={editMode && (user?.role === "admin" || user?.role === "root")}
+                                    onDelete={handleDeleteNews}
+                                    onEdit={handleEditNews}
+                                />
+                            </div>
+                        ))}  
+                        
+                        {((user?.role === "admin" || user?.role === "root") && editMode) && (
+                            <div className="news-grid-item create-card">
+                                <button 
+                                    className="create-news-card"
+                                    onClick={handleOpenCreateModal}
+                                >
+                                    <div className="create-news-icon">+</div>
+                                    <span className="create-news-text">Создать новость</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
-                ))}  
-                
-                {/* Кнопка создания новости в режиме редактирования */}
-                {((user?.role === "admin" || user?.role === "root") && editMode) && (
-                    <div className="news-grid-item create-card">
-                    <button 
-                        className="create-news-card"
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        <div className="create-news-icon">+</div>
-                        <span className="create-news-text">Создать новость</span>
-                    </button>
-                    </div>
-                )}
                 </div>
-            </div>
             </section>
-            {/* Модальное окно создания новости */}
+
             <NewsModalBuilder
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={handleCloseModal}
                 onSave={handleSaveNews}
+                mode={modalMode}
+                newsId={editingNewsId}
+                isSubmitting={isSubmitting}
             />
         </div>
     );
