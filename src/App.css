@@ -1,5 +1,5 @@
 /* ============================================================================
-   CSS Variables (Цветовая схема)  social-grid load--container nav-item home-hero-create-button
+   CSS Variables (Цветовая схема)  social-grid load--container nav-item home-hero-create-button, create-news-card
    ============================================================================ */
    :root {
     /* Основные цвета header-bar*/
@@ -160,7 +160,7 @@
   }
   
   /* ============================================================================
-     Logo container
+     Logo container  news-card-edit 
      ============================================================================ */
   .logo {
       display: flex;
@@ -1433,18 +1433,17 @@
   .news-card-edit:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px var(--btn-primary-hover);
-    transition: all 50ms linear;
   }
 
   .news-card-edit.visible{
     opacity: 1;
-    transition: all 0.3s linear;
+    transition: all 0.1s linear;
   }
   
   .news-card-remove {
     opacity: 0;
-    position: absolute;
     display: flex;
+    position: absolute;
     justify-content: center;
     align-items: center;
     width: 30px;
@@ -1462,32 +1461,36 @@
   .news-card-remove:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px var(--btn-primary-hover);
-    transition: all 50ms linear;
   }
   
   .news-card-remove.visible{
     opacity: 1;
-    transition: all 0.3s linear;
+    transition: all 0.1s linear;
   }
 
   .remove-icon {
     display: flex;
-    flex-direction: column;
+    position: relative;
+    justify-content: center;
+    align-self: center;
   }
   
   .remove-icon span {
     width: 15px;
     height: 2px;
+    position: absolute;
     border-radius: 10px;
+    top:-0.5px;
+    left:-7px;
     background-color: white;
   }
   
   .remove-icon span[id='1'] {
-    transform: rotate(45deg) translate(1px, 1px);
+    transform: rotate(45deg);
   }
   
   .remove-icon span[id='2'] {
-    transform: rotate(-45deg) translate(0px, 0px);
+    transform: rotate(-45deg);
   }
   
   .news-card {

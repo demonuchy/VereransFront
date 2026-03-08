@@ -36,7 +36,8 @@ function Home() {
         };
         
         loadInitialData();
-    }, [fetchNews]);
+        console.log(user)
+    }, [fetchNews, user]);
 
     const doubleClickHandler = useCallback((e) => {
         if (e.target.closest('button')) return;
