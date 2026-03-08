@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import NewsCard from "../components/NewsCard";
 import NewsModalBuilder from "../components/NewsModalBuilder";
-import LoadScreen from "../components/LoadScreen";
 import useApi from "../hooks/useApi";
 import { useAuth } from '../hooks/useAuthContext';
 
@@ -14,28 +13,19 @@ function Home() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { createNews, getAllNews, deleteNewsById, updateNewsById } = useApi();
     const [editMode, setEditMode] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-    const { user, loading } = useAuth();
+    const { user } = useAuth();
     
     const isFirstLoad = useRef(true);
 
-    const fetchNews = useCallback(async (showLoader = true) => {
-        if (showLoader && !initialLoadComplete) {
-            setIsLoading(true);
-        }
-        
+    const fetchNews = useCallback(async () => {
         try {
             const response = await getAllNews();
             setNews(response.data.news);
         } catch (err) {
             console.error('Error fetching news:', err);
             setNews([]);
-        } finally {
-            setIsLoading(false);
-            setInitialLoadComplete(true);
-        }
-    }, [getAllNews, initialLoadComplete]);
+        } 
+    }, [getAllNews]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -47,12 +37,6 @@ function Home() {
         
         loadInitialData();
     }, [fetchNews]);
-
-    useEffect(() => {
-        if (!loading && !initialLoadComplete && isFirstLoad.current) {
-            fetchNews(true);
-        }
-    }, [loading, initialLoadComplete, fetchNews]);
 
     const doubleClickHandler = useCallback((e) => {
         if (e.target.closest('button')) return;
@@ -170,10 +154,6 @@ function Home() {
         setEditingNewsId(null);
         setIsModalOpen(true);
     }, []);
-
-    if (isLoading && !initialLoadComplete) {
-        return <LoadScreen />;
-    }
 
     if (news?.length === 0) {
         return (

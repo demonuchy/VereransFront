@@ -74,13 +74,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const logout = useCallback(async (skipApi = false) => {
+  const logout = useCallback(async () => {
     console.log("🔓 Logout called");
     try {
-      if (!skipApi && accessTokenRef.current && deviceReady) {
+      if (accessTokenRef.current && deviceReady) {
         await apiLogout(accessTokenRef.current).catch(err => 
           console.error('Logout API error:', err)
         );
+      } else {
+        console.log("Error logout")
       }
     } finally {
       // Очищаем состояние пользователя и токены
@@ -395,7 +397,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user && !!accessToken && deviceReady,
     login,
     register,
-    logout: () => logout(false),
+    logout,
     logoutAndResetDevice, // Добавляем возможность полного сброса
     deviceReady,
     deviceId, // Пробрасываем deviceId для использования в компонентах

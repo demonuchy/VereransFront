@@ -227,6 +227,12 @@ function NewsDetail() {
           </div>
         )}
       </div>
+      <button 
+        className='back-news-list-btn'
+        onClick={handleBack}
+      >
+        Вернуться к списку новостей
+      </button>
     </div>
   );
 }

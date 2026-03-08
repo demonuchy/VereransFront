@@ -19,6 +19,7 @@ function App() {
   return (
     <Router>
       <AuthProvider> {/* AuthProvider на самом верхнем уровне */}
+        <Suspense fallback={<LoadScreen />}>
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<Home />} />
@@ -33,6 +34,7 @@ function App() {
               <Route path="/register" element={<Register />} />
             </Route>
           </Routes>
+        </Suspense>
       </AuthProvider>
     </Router>
   );
