@@ -18,7 +18,7 @@ function NewsModalBuilder({
   const [error, setError] = useState(null);
   
   const fileInputRef = useRef(null);
-  const { getNewsById, updateNewsById } = useApi();
+  const { getNewsById } = useApi();
 
   // Загружаем данные новости при открытии модалки в режиме редактирования
   useEffect(() => {
@@ -42,7 +42,7 @@ function NewsModalBuilder({
           console.error('Error loading news data:', err);
           setError('Не удалось загрузить данные новости');
         } finally {
-          setIsLoading(false); 
+          setIsLoading(false);
         }
       }
     };

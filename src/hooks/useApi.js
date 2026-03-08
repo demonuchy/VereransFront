@@ -315,16 +315,13 @@ const useApi = () => {
         method: 'POST',
         headers: getHeaders(null, { // Не передаем accessToken для refresh
           'Content-Type': 'application/json',
+          'Authorization' : `Bearer ${refreshToken}`
         }),
-        body: JSON.stringify({ refresh_token: refreshToken }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || 'Token refresh failed');
       }
-
       return data;
     } catch (error) {
       console.error('Refresh token error:', error);
@@ -360,7 +357,7 @@ const useApi = () => {
     getAllNews,
     getNewsById,
     deleteNewsById,
-    updateNewsById, // Новый метод
+    updateNewsById, 
     register,
     login,
     getMe,

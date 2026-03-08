@@ -49,18 +49,6 @@ const Contacts = () => {
       url: 'https://t.me/sovetveteranov',
       color: '#0088cc'
     },
-    { 
-      name: 'Одноклассники', 
-      icon: 'fab fa-odnoklassniki', 
-      url: 'https://ok.ru/sovetveteranov',
-      color: '#EE8208'
-    },
-    { 
-      name: 'Viber', 
-      icon: 'fab fa-viber', 
-      url: 'viber://chat?number=74951234567',
-      color: '#7360F2'
-    }
   ];
 
   const faqItems = [
@@ -130,7 +118,7 @@ const Contacts = () => {
             <div className="map-wrapper">
               <iframe
                 title="Карта проезда"
-                src="https://yandex.ru/map-widget/v1/?ll=37.617494%2C55.750625&z=12"
+                src="https://yandex.ru/map-widget/v1/?ll=39.863410%2C47.269509&z=17"
                 width="100%"
                 height="450"
                 frameBorder="0"

@@ -1,5 +1,5 @@
 /* ============================================================================
-   CSS Variables (Цветовая схема)  button-loader modal-loading load--container
+   CSS Variables (Цветовая схема)  social-grid
    ============================================================================ */
    :root {
     /* Основные цвета header-bar*/
@@ -1431,7 +1431,7 @@
   .news-card-edit:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px var(--btn-primary-hover);
-    transition: all 0.1s linear;
+    transition: all 50ms linear;
   }
 
   .news-card-edit.visible{
@@ -1460,7 +1460,7 @@
   .news-card-remove:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px var(--btn-primary-hover);
-    transition: all 0.1s linear;
+    transition: all 50ms linear;
   }
   
   .news-card-remove.visible{
@@ -3018,12 +3018,10 @@
   }
   
   .social-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
   }
   
   .social-card {

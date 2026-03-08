@@ -64,26 +64,73 @@ function Home() {
             setIsSubmitting(true);
             
             if (newsData.mode === 'edit') {
+                // Преобразуем существующие изображения из base64 в File объекты
+                const existingFiles = await Promise.all(
+                    (newsData.existingImages || []).map(async (img, index) => {
+                        // Если есть base64, конвертируем в File
+                        if (img.base64) {
+                            const base64Data = img.base64;
+                            const byteCharacters = atob(base64Data);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const blob = new Blob([byteArray], { type: 'image/jpeg' });
+                            
+                            return new File(
+                                [blob], 
+                                img.filename || `existing-image-${index}.jpg`, 
+                                { type: 'image/jpeg' }
+                            );
+                        }
+                        
+                        // Если есть url, загружаем и конвертируем
+                        if (img.url) {
+                            const response = await fetch(img.url);
+                            const blob = await response.blob();
+                            return new File(
+                                [blob], 
+                                img.filename || `existing-image-${index}.jpg`, 
+                                { type: blob.type }
+                            );
+                        }
+                        
+                        return null;
+                    })
+                );
+    
+                // Фильтруем null значения и объединяем с новыми изображениями
+                const allImageFiles = [
+                    ...existingFiles.filter(f => f !== null),
+                    ...(newsData.newImages || [])
+                ];
+    
+                console.log('Sending all images as files:', allImageFiles);
+    
                 await updateNewsById(
                     newsData.id,
                     newsData.title,
                     newsData.content,
-                    newsData.newImages,
+                    allImageFiles, // Теперь все элементы - File объекты
                     localStorage.getItem('accessToken')
                 );
+                
                 console.log('News updated successfully');
             } else {
+                // Режим создания
                 await createNews(
                     newsData.title,
                     newsData.content,
-                    newsData.newImages,
+                    newsData.images || [],
                     localStorage.getItem('accessToken')
                 );
                 console.log('News created successfully');
             }
             
             await fetchNews(false);
-            
             setIsModalOpen(false);
             setEditingNewsId(null);
             setModalMode('create');
