@@ -9,7 +9,14 @@ function NewsDetail() {
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { getNewsById } = useApi();
+  const [commentText, setCommentText] = useState('');
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [viewsCount, setViewsCount] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  const { getNewsById, likeNews, addComment, getComments } = useApi();
   
   useEffect(() => {
     const fetchNewsData = async () => {
@@ -17,12 +24,12 @@ function NewsDetail() {
         setLoading(true);
         const response = await getNewsById(id);
         console.log("API Response:", response);
+        
         if (response?.data?.news) {
           setNews(response.data.news);
-        } else if (response?.news) {
-          setNews(response.news);
-        } else {
-          setNews(response);
+          setLikesCount(response.data.news.like || 0);
+          setViewsCount(response.data.news.views || 0);
+          setComments(response.data.news.comments || []);
         }
       } catch (error) {
         console.error("Error fetching news:", error);
@@ -36,6 +43,22 @@ function NewsDetail() {
       fetchNewsData();
     }
   }, [id, getNewsById]);
+
+  // Загрузка комментариев при открытии модального окна
+  const loadComments = async () => {
+    try {
+      const response = await getComments(id);
+      if (response?.data?.comments) {
+        setComments(response.data.comments);
+      } else if (Array.isArray(response)) {
+        setComments(response);
+      } else if (response?.comments) {
+        setComments(response.comments);
+      }
+    } catch (error) {
+      console.error("Error loading comments:", error);
+    }
+  };
 
   const handleNextImage = () => {
     if (!news?.images || news.images.length <= 1) return;
@@ -55,6 +78,60 @@ function NewsDetail() {
     navigate('/');
   };
 
+  const handleLike = async () => {
+    try {
+      if (!isLiked) {
+        const response = await likeNews(id);
+        if (response?.success) {
+          setLikesCount(prev => prev + 1);
+          setIsLiked(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error liking news:", error);
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    
+    setIsSubmittingComment(true);
+    try {
+      const response = await addComment(id, { text: commentText });
+      if (response?.success) {
+        // Добавляем новый комментарий в список
+        const newComment = {
+          id: Date.now(),
+          text: commentText,
+          user: 'Пользователь',
+          created_at: new Date().toISOString(),
+          ...response?.data
+        };
+        
+        setComments(prev => [newComment, ...prev]);
+        setCommentText('');
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const openCommentsModal = () => {
+    setIsCommentsModalOpen(true);
+    loadComments(); // Обновляем комментарии при открытии
+    // Блокируем прокрутку основного контента
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeCommentsModal = () => {
+    setIsCommentsModalOpen(false);
+    // Возвращаем прокрутку
+    document.body.style.overflow = 'unset';
+  };
+
   // Функция для безопасного форматирования даты
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -71,6 +148,36 @@ function NewsDetail() {
       });
     } catch (error) {
       console.error("Date formatting error:", error);
+      return '';
+    }
+  };
+
+  // Форматирование даты для комментариев (относительное время)
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - date) / 1000);
+      
+      if (diffInSeconds < 60) return 'только что';
+      if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} ${minutes === 1 ? 'минуту' : minutes < 5 ? 'минуты' : 'минут'} назад`;
+      }
+      if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} ${hours === 1 ? 'час' : hours < 5 ? 'часа' : 'часов'} назад`;
+      }
+      
+      return date.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
       return '';
     }
   };
@@ -224,7 +331,104 @@ function NewsDetail() {
             )}
           </div>
         )}
+
+        {/* Блок взаимодействия (лайки, просмотры, комментарии) */}
+        <div className="news-interaction-section">
+          <div className="news-stats-bar">
+            <div className="news-stats-left">
+              <button 
+                className={`news-like-button ${isLiked ? 'news-liked' : ''}`}
+                onClick={handleLike}
+                disabled={isLiked}
+              >
+                <span className="news-like-icon">❤️</span>
+                <span className="news-like-count">{likesCount}</span>
+              </button>
+              
+              <div className="news-views">
+                <span className="news-views-icon">👁️</span>
+                <span className="news-views-count">{viewsCount}</span>
+              </div>
+              
+              <button 
+                className="news-comments-button"
+                onClick={openCommentsModal}
+              >
+                <span className="news-comments-icon">💬</span>
+                <span className="news-comments-count-number">{comments.length}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+      
+      {/* Модальное окно комментариев */}
+      {isCommentsModalOpen && (
+        <div className="comments-modal-overlay" onClick={closeCommentsModal}>
+          <div className="comments-modal" onClick={e => e.stopPropagation()}>
+            <div className="comments-modal-header">
+              <h3 className="comments-modal-title">Комментарии ({comments.length})</h3>
+              <button className="comments-modal-close" onClick={closeCommentsModal}>×</button>
+            </div>
+            
+            <div className="comments-modal-content">
+              {/* Форма добавления комментария */}
+              <div className="comments-modal-form">
+                <form onSubmit={handleCommentSubmit}>
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Напишите комментарий..."
+                    className="comments-modal-textarea"
+                    rows="2"
+                    maxLength="1000"
+                    required
+                  />
+                  <div className="comments-modal-form-footer">
+                    <span className="comments-modal-char-count">
+                      {commentText.length}/1000
+                    </span>
+                    <button 
+                      type="submit" 
+                      className="comments-modal-submit"
+                      disabled={isSubmittingComment || !commentText.trim()}
+                    >
+                      {isSubmittingComment ? 'Отправка...' : 'Отправить'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Список комментариев */}
+              <div className="comments-modal-list">
+                {comments.length === 0 ? (
+                  <div className="comments-modal-empty">
+                    <p>Пока нет комментариев</p>
+                    <span>Будьте первым, кто оставит комментарий!</span>
+                  </div>
+                ) : (
+                  comments.map((comment, index) => (
+                    <div key={comment.id || index} className="comments-modal-item">
+                      <div className="comments-modal-item-header">
+                        <span className="comments-modal-item-author">
+                          {comment.user || comment.user_name || 'Пользователь'}
+                        </span>
+                        <span className="comments-modal-item-date">
+                          {formatRelativeTime(comment.created_at)}
+                        </span>
+                      </div>
+                      <div className="comments-modal-item-body">
+                        {comment.text || comment.content || ''}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <button 
         className='back-news-list-btn'
         onClick={handleBack}
