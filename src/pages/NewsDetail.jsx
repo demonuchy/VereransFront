@@ -17,8 +17,6 @@ function NewsDetail() {
         setLoading(true);
         const response = await getNewsById(id);
         console.log("API Response:", response);
-        
-        // Извлекаем данные новости из ответа
         if (response?.data?.news) {
           setNews(response.data.news);
         } else if (response?.news) {

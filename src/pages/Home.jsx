@@ -47,32 +47,24 @@ function Home() {
     const handleSaveNews = useCallback(async (newsData) => {
         try {
             setIsSubmitting(true);
-            
             if (newsData.mode === 'edit') {
-                // Преобразуем существующие изображения из base64 в File объекты
                 const existingFiles = await Promise.all(
                     (newsData.existingImages || []).map(async (img, index) => {
-                        // Если есть base64, конвертируем в File
                         if (img.base64) {
                             const base64Data = img.base64;
                             const byteCharacters = atob(base64Data);
                             const byteNumbers = new Array(byteCharacters.length);
-                            
                             for (let i = 0; i < byteCharacters.length; i++) {
                                 byteNumbers[i] = byteCharacters.charCodeAt(i);
                             }
-                            
                             const byteArray = new Uint8Array(byteNumbers);
                             const blob = new Blob([byteArray], { type: 'image/jpeg' });
-                            
                             return new File(
                                 [blob], 
                                 img.filename || `existing-image-${index}.jpg`, 
                                 { type: 'image/jpeg' }
                             );
                         }
-                        
-                        // Если есть url, загружаем и конвертируем
                         if (img.url) {
                             const response = await fetch(img.url);
                             const blob = await response.blob();
@@ -82,12 +74,9 @@ function Home() {
                                 { type: blob.type }
                             );
                         }
-                        
                         return null;
                     })
                 );
-    
-                // Фильтруем null значения и объединяем с новыми изображениями
                 const allImageFiles = [
                     ...existingFiles.filter(f => f !== null),
                     ...(newsData.newImages || [])
@@ -105,11 +94,11 @@ function Home() {
                 
                 console.log('News updated successfully');
             } else {
-                // Режим создания
+                console.log("Created news images :", newsData.images)
                 await createNews(
                     newsData.title,
                     newsData.content,
-                    newsData.images || [],
+                    newsData.newImages || [],
                     localStorage.getItem('accessToken')
                 );
                 console.log('News created successfully');
@@ -240,7 +229,9 @@ function Home() {
                         </div>
                     )}
 
-                    <div className={`news-grid ${editMode ? 'edit-mode' : ''}`}>
+                    <div 
+                        className={`news-grid ${editMode && (user?.role === "admin" || user?.role === "root") ? 'edit-mode' : ''}`}
+                    >
                         {news?.map((item) => (
                             <div key={item.id} className="news-grid-item">
                                 <NewsCard

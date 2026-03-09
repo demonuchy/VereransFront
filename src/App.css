@@ -1,5 +1,5 @@
 /* ============================================================================
-   CSS Variables (Цветовая схема)  social-grid load--container nav-item home-hero-create-button, create-news-card
+   CSS Variables (Цветовая схема)  news-images-slider-bottom
    ============================================================================ */
    :root {
     /* Основные цвета header-bar*/
@@ -1094,7 +1094,7 @@
   .news-grid {
     display: grid;
     grid-template-columns: repeat(3, var(--card-width));
-    gap: 15px; /* Уменьшил отступы */
+    gap: 15px; 
     justify-content: center;
     transition: var(--transition);
     margin: 0 auto;
@@ -1136,7 +1136,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 15px; /* Уменьшил отступы */
+    gap: 15px;
     transition: var(--transition);
     box-shadow: var(--shadow);
     position: relative;
@@ -1671,8 +1671,8 @@
   }
 
   .news-detail-container {
+    width: 100%;
     max-width: 1200px;
-    margin: 0 auto;
     background: white;
     border-radius: 10px;
     overflow: hidden;
@@ -1782,7 +1782,7 @@
   
   .news-images-slider-bottom {
     position: relative;
-    height: 450px;
+    height: 550px;
     border-radius: 12px;
     overflow: hidden;
     background: #f0f0f0;
@@ -3761,7 +3761,7 @@
     }
   }
   
-  @media (max-width: 500px) {
+  @media (max-width: 600px) {
     .logo-container {
       padding: 15px;
     }
@@ -3793,7 +3793,7 @@
     }
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 450px) {
     .auth-header {
       padding: 25px 20px 15px;
     }

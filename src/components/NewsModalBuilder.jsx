@@ -129,7 +129,7 @@ function NewsModalBuilder({
       mode,
       ...(mode === 'edit' && newsId && { id: newsId })
     };
-
+    console.log("News data : ", newsData)
     onSave(newsData);
   };
 

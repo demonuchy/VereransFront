@@ -97,9 +97,9 @@ function NewsCard({
         <div className="news-image">
           <img 
             src={imageSrc} 
-            alt={title || "News image"}
+            alt="News img"
             onError={(e) => {
-              e.target.src = '/placeholder-image.jpg';
+              e.target.src = '/news_placeholder.gif';
             }}
           />
           {editMode && <div className="edit-mode-overlay"></div>}
