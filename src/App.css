@@ -1,5 +1,5 @@
 /* ============================================================================
-   CSS Variables (Цветовая схема)  News Detail .comments-modal
+   CSS Variables (Цветовая схема)  News Detail .comments-modal close-button remove-icon
    ============================================================================ */
    :root {
     /* Основные цвета header-bar*/
@@ -1054,7 +1054,165 @@
     padding: 0 20px;
     width: 100%;
   }
-  
+
+ /* SearchBar.css */
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  z-index: 2;
+}
+
+.search-wrapper {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.search-wrapper.focused {
+  transform: scale(1.02);
+}
+
+.search-row--container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border-radius: 60px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.search-wrapper.focused .search-row--container {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.search-icon {
+  position: absolute;
+  left: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 3;
+  transition: all 0.3s ease;
+}
+
+.search-wrapper.focused .search-icon {
+  color: white;
+  transform: scale(1.1);
+}
+
+.search-row {
+  width: 100%;
+  color: white;
+  font-size: 18px;
+  background: transparent;
+  border: none;
+  padding: 16px 25px 16px 55px;
+  outline: none;
+  position: relative;
+  z-index: 2;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.search-row::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 300;
+  transition: all 0.3s ease;
+}
+
+.search-row:focus::placeholder {
+  opacity: 0.7;
+  transform: translateX(5px);
+}
+
+.clear-button {
+  position: absolute;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  z-index: 3;
+  transition: all 0.3s ease;
+  padding: 0;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.clear-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Верхний блик */
+.search-row--container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent);
+  z-index: 2;
+}
+
+/* Зеркальный эффект снизу */
+.search-row--container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom,
+      transparent,
+      rgba(255, 255, 255, 0.15));
+  border-radius: 0 0 60px 60px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Дополнительные анимированные блики */
+.glass-reflection {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-wrapper:hover .glass-reflection {
+  left: 150%;
+}
+
   /* Edit Mode Banner - теперь совпадает с сеткой */
   .edit-mode-banner {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -1475,22 +1633,8 @@
     align-self: center;
   }
   
-  .remove-icon span {
+  .remove-icon img {
     width: 15px;
-    height: 2px;
-    position: absolute;
-    border-radius: 10px;
-    top:-0.5px;
-    left:-7px;
-    background-color: white;
-  }
-  
-  .remove-icon span[id='1'] {
-    transform: rotate(45deg);
-  }
-  
-  .remove-icon span[id='2'] {
-    transform: rotate(-45deg);
   }
   
   .news-card {
@@ -2558,9 +2702,9 @@
     background: none;
     border: none;
     font-size: 24px;
-    scale: 2;
+    scale: 1.5;
     cursor: pointer;
-    color: var(--btn-primary);
+    color: var(--text-muted);
     padding: 0 8px;
   }
   

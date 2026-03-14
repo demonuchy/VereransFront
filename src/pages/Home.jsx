@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import NewsCard from "../components/NewsCard";
 import NewsModalBuilder from "../components/NewsModalBuilder";
 import useApi from "../hooks/useApi";
+import SearchBar from "../components/SearchBar";
 import { useAuth } from '../hooks/useAuthContext';
 
 function Home() {
@@ -216,6 +217,7 @@ function Home() {
                             </button>
                         )}
                     </div>
+                    <SearchBar />
                 </div>
             </section>
 

@@ -72,8 +72,7 @@ function NewsCard({
               <span className="remove-spinner"></span>
             ) : (
               <span className="remove-icon">
-                <span id="1"></span>
-                <span id="2"></span>
+               <img src="bin.png" alt="none" />
               </span>
             )}
           </button>

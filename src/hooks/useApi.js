@@ -58,7 +58,34 @@ const useApi = () => {
   }, []);
 
   const deleteNewsById = useCallback(async (newsId) => {
-    return apiClient(`/news/${newsId}`, { method: 'DELETE' });
+    return apiClient(
+      `/news/${newsId}`, 
+      { method: 'DELETE' }
+      );
+  }, []);
+
+  const likeNews = useCallback(async (newsId) => {
+    return apiClient(
+      `/news/${newsId}/like`, 
+      { method: 'POST'});
+  }, []);
+
+  const leaveComment = useCallback(async (newsId, content) => {
+    const formData = new FormData();
+    formData.append('content', content);
+    return apiClient(
+      `/news/${newsId}/comment`, 
+      { 
+        method: 'POST', 
+        body: formData 
+      });
+  }, []);
+
+  const deleteComment = useCallback(async (newsId, commentId) => {
+    return apiClient(
+      `/news/${newsId}/comment/${commentId}`, 
+      { method: 'POST' }
+      );
   }, []);
 
   const updateNewsById = useCallback(async (newsId, title, body, images = []) => {
@@ -105,6 +132,9 @@ const useApi = () => {
     getNewsById,
     deleteNewsById,
     updateNewsById,
+    likeNews,
+    leaveComment,
+    deleteComment,
     register,
     login,
     getMe,
