@@ -3,13 +3,12 @@ const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 // Простая обертка над fetch
 const apiClient = async (url, options = {}) => {
-  // 1. Берем токен из localStorage
-  console.log("1. Берем токен из localStorage")
+  console.log("1. Берем токен из localStorage");
   const token = localStorage.getItem('accessToken');
   const deviceId = localStorage.getItem('app_device_id');
   
   // 2. Формируем заголовки
-  console.log("2. Формируем заголовки")
+  console.log("2. Формируем заголовки");
   const headers = {
     'X-Device-Id': deviceId || 'unknown-device',
     ...options.headers
@@ -21,64 +20,113 @@ const apiClient = async (url, options = {}) => {
   }
   
   // Если есть токен - добавляем Authorization
-  
   if (token) {
-    console.log("Добавляем токен")
+    console.log("Добавляем токен");
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  // 3. Делаем запрос
-  console.log("3. Делаем запрос ...")
-  try{
-    let response = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers
+  // Функция для выполнения запроса
+  const makeRequest = async (customHeaders = headers) => {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers: customHeaders
     });
-    if (response.ok) {
-        const data = await response.json();
-        console.log("все хорошо - возвращаем данные")
-        return data
+    
+    // Для ошибок 401 не делаем редирект, а возвращаем ошибку
+    if (response.status === 401) {
+      console.log("⚠️ Получен 401 Unauthorized");
+      const error = new Error('Unauthorized');
+      error.status = 401;
+      throw error;
     }
-  } catch (err) {
-    console.log("поймали ошибку !!")
-    console.log("401 - пробуем обновить токен")
-    console.log('🔄 Токен Доступа исетк, пробуем обновить...');
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      window.location.href = '/login';
-      throw new Error('Нет refresh токена');
+    
+    // Для других ошибок
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+      } catch (e) {
+        // Если не удалось распарсить JSON
+      }
+      const error = new Error(errorMessage);
+      error.status = response.status;
+      throw error;
     }
-    const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refreshToken}`,
-        'X-Device-Id': deviceId || 'unknown-device'
+    
+    // Успешный ответ
+    const data = await response.json();
+    return data;
+  };
+  
+  try {
+    // Пытаемся выполнить запрос
+    return await makeRequest();
+  } catch (error) {
+    // Если ошибка 401 и есть refresh token - пробуем обновить
+    if (error.status === 401) {
+      console.log("🔄 401 ошибка, пробуем обновить токен...");
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (!refreshToken) {
+        console.log("❌ Нет refresh токена");
+        // Возвращаем ошибку, а не делаем редирект
+        throw new Error('Необходима авторизация');
       }
-    });
-    if (refreshResponse.ok) {
-      const response = await refreshResponse.json();
-      localStorage.setItem('accessToken', response.data.access_token);
-      if (response.data.refresh_token) {
-        localStorage.setItem('refreshToken', response.data.refresh_token);
-      }
-      headers['Authorization'] = `Bearer ${response.data.access_token}`;
-      const retryResponse = await fetch(`${API_BASE_URL}${url}`, {
-        ...options,
-        headers
-      });
-      if (retryResponse.ok) {
-        const retryData = await retryResponse.json();
-        return retryData;
+      
+      try {
+        // Обновляем токен
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': deviceId || 'unknown-device'
+          },
+          body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          const newAccessToken = refreshData.access_token || refreshData.data?.access_token;
+          
+          if (newAccessToken) {
+            localStorage.setItem('accessToken', newAccessToken);
+            
+            if (refreshData.refresh_token || refreshData.data?.refresh_token) {
+              localStorage.setItem('refreshToken', refreshData.refresh_token || refreshData.data?.refresh_token);
+            }
+            
+            console.log("✅ Токен успешно обновлен");
+            
+            // Повторяем исходный запрос с новым токеном
+            const newHeaders = {
+              ...headers,
+              'Authorization': `Bearer ${newAccessToken}`
+            };
+            
+            return await makeRequest(newHeaders);
+          }
+        }
+        
+        // Если не удалось обновить токен
+        console.log("❌ Не удалось обновить токен");
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        
+        // ВАЖНО: НЕ делаем window.location.href = '/login'
+        // Возвращаем ошибку, чтобы компонент сам решил что делать
+        throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
+        
+      } catch (refreshError) {
+        console.error("❌ Ошибка при обновлении токена:", refreshError);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
       }
     }
     
-    // Если не удалось обновить токен
-    console.log('❌ Не удалось обновить токен');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    window.location.href = '/login';
-    throw new Error('Сессия истекла');
+    // Пробрасываем другие ошибки дальше
+    throw error;
   }
 };
 

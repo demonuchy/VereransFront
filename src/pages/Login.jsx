@@ -13,8 +13,8 @@ const Login = () => {
     password: '',
   });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -51,18 +51,25 @@ const Login = () => {
     e.preventDefault();
     
     if (!validateForm()) return;
-
-    setLoading(true);
+    
+    if (isSubmitting) return; // Предотвращаем двойную отправку
+    
+    setIsSubmitting(true);
     setApiError('');
 
     try {
-      const response = await login(formData.email, formData.password);
-      console.log('Login response:', response);
+      const result = await login(formData.email, formData.password);
+      console.log('Login result:', result);
       
-      if (response?.data?.access_token) {
-        navigate('/');
+      // ВАЖНО: проверяем result.success, а не response?.data?.access_token
+      if (result?.success) {
+        console.log('Login successful, navigating to home');
+        // Используем replace вместо navigate, чтобы избежать возврата на страницу логина
+        navigate('/', { replace: true });
       } else {
-        setApiError('Неверный ответ от сервера');
+        // Показываем ошибку из result.error
+        setApiError(result?.error || 'Неверный email или пароль');
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -74,8 +81,7 @@ const Login = () => {
       } else {
         setApiError(error.message || 'Ошибка при входе');
       }
-    } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -145,8 +151,8 @@ const Login = () => {
                   </Link>
                 </div>
 
-                <SubmitButton loading={loading}>
-                  Войти
+                <SubmitButton loading={isSubmitting}>
+                  {isSubmitting ? 'Вход...' : 'Войти'}
                 </SubmitButton>
               </form>
             </div>

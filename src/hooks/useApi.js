@@ -1,41 +1,8 @@
 // hooks/useApi.js
-import { useCallback, useEffect, useState } from 'react';
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { useCallback } from 'react';
 import apiClient from '../api/client';
 
-const DEVICE_ID_STORAGE_KEY = 'app_device_id';
-
 const useApi = () => {
-  const [deviceId, setDeviceId] = useState(null);
-  const [isDeviceIdLoading, setIsDeviceIdLoading] = useState(true);
-
-  // Загружаем или создаем deviceId
-  useEffect(() => {
-    const loadDeviceId = async () => {
-      const saved = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
-      if (saved) {
-        setDeviceId(saved);
-        setIsDeviceIdLoading(false);
-        return;
-      }
-
-      try {
-        const fp = await FingerprintJS.load();
-        const result = await fp.get();
-        localStorage.setItem(DEVICE_ID_STORAGE_KEY, result.visitorId);
-        setDeviceId(result.visitorId);
-      } catch (error) {
-        const fallback = 'fallback-' + Date.now();
-        localStorage.setItem(DEVICE_ID_STORAGE_KEY, fallback);
-        setDeviceId(fallback);
-      } finally {
-        setIsDeviceIdLoading(false);
-      }
-    };
-
-    loadDeviceId();
-  }, []);
-
   // Методы API
   const createNews = useCallback(async (title, body, images = []) => {
     const formData = new FormData();
@@ -61,31 +28,7 @@ const useApi = () => {
     return apiClient(
       `/news/${newsId}`, 
       { method: 'DELETE' }
-      );
-  }, []);
-
-  const likeNews = useCallback(async (newsId) => {
-    return apiClient(
-      `/news/${newsId}/like`, 
-      { method: 'POST'});
-  }, []);
-
-  const leaveComment = useCallback(async (newsId, content) => {
-    const formData = new FormData();
-    formData.append('content', content);
-    return apiClient(
-      `/news/${newsId}/comment`, 
-      { 
-        method: 'POST', 
-        body: formData 
-      });
-  }, []);
-
-  const deleteComment = useCallback(async (newsId, commentId) => {
-    return apiClient(
-      `/news/${newsId}/comment/${commentId}`, 
-      { method: 'POST' }
-      );
+    );
   }, []);
 
   const updateNewsById = useCallback(async (newsId, title, body, images = []) => {
@@ -100,21 +43,45 @@ const useApi = () => {
     });
   }, []);
 
+  const likeNews = useCallback(async (newsId) => {
+    return apiClient(
+      `/news/${newsId}/like`, 
+      { method: 'POST' }
+    );
+  }, []);
+
+  const leaveComment = useCallback(async (newsId, content) => {
+    const formData = new FormData();
+    formData.append('content', content);
+    return apiClient(
+      `/news/${newsId}/comment`, 
+      { 
+        method: 'POST', 
+        body: formData 
+      }
+    );
+  }, []);
+
+  const deleteComment = useCallback(async (newsId, commentId) => {
+    return apiClient(
+      `/news/${newsId}/comment/${commentId}`, 
+      { method: 'POST' }
+    );
+  }, []);
+
   const register = useCallback(async (username, password) => {
-    if (isDeviceIdLoading) throw new Error('Device ID загружается...');
     return apiClient('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ username, password })
     });
-  }, [isDeviceIdLoading]);
+  }, []);
 
   const login = useCallback(async (username, password) => {
-    if (isDeviceIdLoading) throw new Error('Device ID загружается...');
     return apiClient('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password })
     });
-  }, [isDeviceIdLoading]);
+  }, []);
 
   const getMe = useCallback(async () => {
     return apiClient('/users/me');
@@ -125,8 +92,6 @@ const useApi = () => {
   }, []);
 
   return {
-    isDeviceIdLoading,
-    deviceId,
     createNews,
     getAllNews,
     getNewsById,

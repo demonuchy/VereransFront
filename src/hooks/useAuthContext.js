@@ -1,8 +1,10 @@
 // hooks/useAuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef, useCallback } from 'react';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import useApi from './useApi';
 
 const AuthContext = createContext(null);
+const DEVICE_ID_STORAGE_KEY = 'app_device_id';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -12,145 +14,267 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [deviceReady, setDeviceReady] = useState(false);
+  const [deviceId, setDeviceId] = useState(null);
+  const [isDeviceIdLoading, setIsDeviceIdLoading] = useState(true);
+  const initCalledRef = useRef(false);
   
   const { 
     login: apiLogin, 
     register: apiRegister, 
     getMe, 
     logout: apiLogout,
-    isDeviceIdLoading,
-    deviceId
   } = useApi();
 
-  // Ждем deviceId
+  // Загружаем или создаем deviceId
   useEffect(() => {
-    if (!isDeviceIdLoading && deviceId) {
-      console.log('✅ Device ID готов');
-      setDeviceReady(true);
-    }
-  }, [isDeviceIdLoading, deviceId]);
-
-  const initAuth = async () => {
-    if (!deviceReady) {
-      console.warn("Device not ready")
-      return;
-    }
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      console.warn("Token not found")
-      setLoading(false);
-      return;
-    }
-    try {
-      console.log("Send request get me")
-      const response = await getMe();
-      console.log('getMe response:', response);
-      if (response?.data?.user) {
+    console.log("🆔 Загрузка Device ID...");
+    const loadDeviceId = async () => {
+      try {
+        let storedDeviceId = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
         
+        if (storedDeviceId) {
+          console.log("📦 Device ID найден в localStorage:", storedDeviceId);
+          setDeviceId(storedDeviceId);
+          setIsDeviceIdLoading(false);
+          return;
+        }
+        
+        console.log("🔐 Создание нового Device ID через fingerprint...");
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        const newDeviceId = result.visitorId;
+        
+        localStorage.setItem(DEVICE_ID_STORAGE_KEY, newDeviceId);
+        setDeviceId(newDeviceId);
+        console.log("✅ Новый Device ID создан:", newDeviceId);
+      } catch (error) {
+        console.warn("⚠️ Ошибка при создании Device ID:", error);
+        const fallback = 'fallback-' + Date.now();
+        localStorage.setItem(DEVICE_ID_STORAGE_KEY, fallback);
+        setDeviceId(fallback);
+        console.log("🔄 Используем fallback Device ID:", fallback);
+      } finally {
+        setIsDeviceIdLoading(false);
+      }
+    };
+
+    loadDeviceId();
+  }, []);
+
+  const initAuth = useCallback(async () => {
+    console.log("🔧 initAuth вызван, isDeviceIdLoading:", isDeviceIdLoading, "deviceId:", deviceId);
+    
+    if (isDeviceIdLoading) {
+      console.log("⏳ Ожидание загрузки Device ID...");
+      return;
+    }
+    
+    if (!deviceId) {
+      console.warn("❌ Device ID не получен");
+      return;
+    }
+    
+    console.log("✅ Device ID готов:", deviceId);
+    
+    const token = localStorage.getItem('accessToken');
+    console.log("🔑 Токен в localStorage:", token ? "есть" : "нет");
+    
+    if (!token) {
+      console.log("🔑 Токен не найден");
+      return;
+    }
+    
+    try {
+      console.log("📡 Отправка запроса getMe");
+      const response = await getMe();
+      console.log('✅ getMe response:', response);
+      
+      if (response?.data?.user) {
         setUser(response.data.user);
+        console.log("👤 Пользователь установлен:", response.data.user);
       } else {
-        console.warn("User not found remove tokens...")
+        console.warn("⚠️ Пользователь не найден, удаляем токены...");
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       }
     } catch (error) {
-      console.error('Ошибка инициализации:', error);
+      console.error('❌ Ошибка инициализации:', error);
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     } finally {
-      setLoading(false);
+      console.log("🏁 Инициализация завершена, loading:", false);
     }
-  };
+  }, [deviceId, getMe, isDeviceIdLoading]);
+
   useEffect(() => {
-    console.log("Init auth ....")
-    initAuth();
-  }, [deviceReady, getMe]);
+    console.log("🔄 useEffect проверка:", { isDeviceIdLoading, deviceId, initCalled: initCalledRef.current });
+    if (!isDeviceIdLoading && deviceId && !initCalledRef.current) {
+      console.log("🚀 Запускаем initAuth");
+      initCalledRef.current = true;
+      initAuth();
+    }
+  }, [isDeviceIdLoading, deviceId, initAuth]);
 
   const login = async (username, password) => {
-    if (!deviceReady) throw new Error('Device ID не готов');    
-    setLoading(true);
+    console.log("🔐 Login вызван", { username, deviceId, isDeviceIdLoading });
+    
+    if (isDeviceIdLoading) {
+      console.error("❌ Device ID еще загружается");
+      return { success: false, error: 'Device ID еще загружается, подождите...' };
+    }
+    
+    if (!deviceId) {
+      console.error("❌ Device ID не получен");
+      return { success: false, error: 'Device ID не получен' };
+    }
+    
+    console.log("📡 Отправка запроса на /auth/login");
+    
     try {
       const response = await apiLogin(username, password);
+      console.log("📥 Ответ от сервера:", response);
+      
       if (response?.data?.access_token) {
-        console.log("set tokens ....")
+        console.log("✅ Успешный вход, сохраняем токены");
         const accessToken = response.data.access_token;
         const refreshToken = response.data.refresh_token;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        console.log("return response", response)
-        initAuth();
-        return response;
+        
+        console.log("📡 Получаем данные пользователя");
+        const userResponse = await getMe();
+        console.log("👤 Данные пользователя:", userResponse);
+        
+        if (userResponse?.data?.user) {
+          setUser(userResponse.data.user);
+          console.log("✅ Пользователь установлен в состояние");
+        }
+        
+        return { success: true, data: response.data };
       }
+      
       if (response?.data?.detail) {
-        return { success: false, error: response.data.detail};
+        console.warn("⚠️ Ошибка от сервера:", response.data.detail);
+        return { success: false, error: response.data.detail };
       }
+      
+      console.warn("⚠️ Неизвестная ошибка входа");
       return { success: false, error: 'Ошибка входа' };
     } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
+      console.error('❌ Login error:', error);
+      console.error('❌ Полный объект ошибки:', JSON.stringify(error, null, 2));
+      return { success: false, error: error.message || 'Произошла ошибка при входе' };
     }
   };
 
   const register = async (username, password) => {
-    if (!deviceReady) throw new Error('Device ID не готов');
-    setLoading(true);
+    console.log("📝 Register вызван", { username, deviceId, isDeviceIdLoading });
+    
+    if (isDeviceIdLoading) {
+      console.error("❌ Device ID еще загружается");
+      return { success: false, error: 'Device ID еще загружается, подождите...' };
+    }
+    
+    if (!deviceId) {
+      console.error("❌ Device ID не получен");
+      return { success: false, error: 'Device ID не получен' };
+    }
+    
+    console.log("📡 Отправка запроса на /auth/register");
+    
     try {
       const response = await apiRegister(username, password);
-      console.log('Register response:', response);
+      console.log("📥 Ответ от сервера:", response);
+      
       if (response?.data?.access_token) {
+        console.log("✅ Успешная регистрация, сохраняем токены");
         const accessToken = response.data.access_token;
         const refreshToken = response.data.refresh_token;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        initAuth();
-        return response;
+        
+        console.log("📡 Получаем данные пользователя");
+        const userResponse = await getMe();
+        console.log("👤 Данные пользователя:", userResponse);
+        
+        if (userResponse?.data?.user) {
+          setUser(userResponse.data.user);
+          console.log("✅ Пользователь установлен в состояние");
+        }
+        
+        return { success: true, data: response.data };
       }
+      
       if (response?.data?.detail) {
-        return { success: false, error: response.data.detail};
+        console.warn("⚠️ Ошибка от сервера:", response.data.detail);
+        return { success: false, error: response.data.detail };
       }
+      
+      console.warn("⚠️ Неизвестная ошибка регистрации");
       return { success: false, error: 'Ошибка регистрации' };
     } catch (error) {
-      console.error('Register error:', error);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
+      console.error('❌ Register error:', error);
+      console.error('❌ Полный объект ошибки:', JSON.stringify(error, null, 2));
+      return { success: false, error: error.message || 'Произошла ошибка при регистрации' };
     }
   };
 
   const logout = async () => {
+    console.log("🚪 Logout called");
     try {
-      console.log("Logout called ")
       await apiLogout();
-      console.log("User logout")
+      console.log("✅ User logged out from server");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Logout error:', error);
     } finally {
       setUser(null);
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      console.log("🗑️ Токены удалены, пользователь сброшен");
     }
   };
 
   const logoutAndResetDevice = async () => {
+    console.log("🔄 Logout and reset device");
     await logout();
-    localStorage.removeItem('app_device_id');
+    localStorage.removeItem(DEVICE_ID_STORAGE_KEY);
+    console.log("🔄 Перезагрузка страницы");
     window.location.reload();
+  };
+
+  const refreshDeviceId = async () => {
+    console.log("🔄 Refresh device ID");
+    setIsDeviceIdLoading(true);
+    try {
+      const fp = await FingerprintJS.load();
+      const result = await fp.get();
+      const newDeviceId = result.visitorId;
+      localStorage.setItem(DEVICE_ID_STORAGE_KEY, newDeviceId);
+      setDeviceId(newDeviceId);
+      console.log("✅ Device ID обновлен:", newDeviceId);
+      return newDeviceId;
+    } catch (error) {
+      console.error("❌ Ошибка обновления Device ID:", error);
+      const fallback = 'fallback-' + Date.now();
+      localStorage.setItem(DEVICE_ID_STORAGE_KEY, fallback);
+      setDeviceId(fallback);
+      console.log("🔄 Используем fallback Device ID:", fallback);
+      return fallback;
+    } finally {
+      setIsDeviceIdLoading(false);
+    }
   };
 
   const value = {
     user,
-    loading,
     isAuthenticated: !!user,
     login,
     register,
     logout,
     logoutAndResetDevice,
-    deviceReady,
+    deviceReady: !isDeviceIdLoading && !!deviceId,
     deviceId,
+    refreshDeviceId,
   };
 
   return (
