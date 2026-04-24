@@ -1,8 +1,8 @@
 // api/simpleClient.js
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = 'http://localhost:8080/api/';
 
 // Простая обертка над fetch
-const apiClient = async (url, options = {}) => {
+const apiClient = async (url, options = {}, version = "v1") => {
   console.log("1. Берем токен из localStorage");
   const token = localStorage.getItem('accessToken');
   const deviceId = localStorage.getItem('app_device_id');
@@ -27,7 +27,7 @@ const apiClient = async (url, options = {}) => {
   
   // Функция для выполнения запроса
   const makeRequest = async (customHeaders = headers) => {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
+    const response = await fetch(`${API_BASE_URL}${version}${url}`, {
       ...options,
       headers: customHeaders
     });

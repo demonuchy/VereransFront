@@ -20,8 +20,16 @@ const useApi = () => {
     return apiClient('/news/');
   }, []);
 
+  const streamGetAllNews = useCallback(async () => {
+    return apiClient('/news/', {}, "v2");
+  }, []);
+
   const getNewsById = useCallback(async (newsId) => {
     return apiClient(`/news/${newsId}`);
+  }, []);
+
+  const streamGetNewsById = useCallback(async (newsId) => {
+    return apiClient(`/news/${newsId}`, {}, "v2");
   }, []);
 
   const deleteNewsById = useCallback(async (newsId) => {
@@ -41,6 +49,18 @@ const useApi = () => {
       method: 'PATCH', 
       body: formData 
     });
+  }, []);
+
+  const optimizedUpdateNewsById = useCallback(async (newsId, title = NaN, body = NaN, uploadImages = NaN, removeImages = NaN) => {
+    const formData = new FormData();
+    if (title) formData.append('title', title);
+    if (body) formData.append('body', body);
+    if (uploadImages) uploadImages.forEach(img => formData.append('upload_images', img));
+    if (removeImages) removeImages.forEach(img => formData.append('remove_images', img));
+    return apiClient(`/news/${newsId}`, { 
+      method: 'PATCH', 
+      body: formData 
+    }, "v2");
   }, []);
 
   const likeNews = useCallback(async (newsId) => {
@@ -94,9 +114,12 @@ const useApi = () => {
   return {
     createNews,
     getAllNews,
+    streamGetAllNews,
     getNewsById,
+    streamGetNewsById,
     deleteNewsById,
     updateNewsById,
+    optimizedUpdateNewsById,
     likeNews,
     leaveComment,
     deleteComment,

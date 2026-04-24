@@ -12,7 +12,7 @@ function Home() {
     const [modalMode, setModalMode] = useState('create');
     const [editingNewsId, setEditingNewsId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { createNews, getAllNews, deleteNewsById, updateNewsById } = useApi();
+    const { createNews, getAllNews, streamGetAllNews, deleteNewsById, optimizedUpdateNewsById} = useApi();
     const [editMode, setEditMode] = useState(false);
     const { user } = useAuth();
     
@@ -20,13 +20,13 @@ function Home() {
 
     const fetchNews = useCallback(async () => {
         try {
-            const response = await getAllNews();
+            const response = await streamGetAllNews();
             setNews(response.data.news);
         } catch (err) {
             console.error('Error fetching news:', err);
             setNews([]);
         } 
-    }, [getAllNews]);
+    }, [streamGetAllNews]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -49,50 +49,16 @@ function Home() {
         try {
             setIsSubmitting(true);
             if (newsData.mode === 'edit') {
-                const existingFiles = await Promise.all(
-                    (newsData.existingImages || []).map(async (img, index) => {
-                        if (img.base64) {
-                            const base64Data = img.base64;
-                            const byteCharacters = atob(base64Data);
-                            const byteNumbers = new Array(byteCharacters.length);
-                            for (let i = 0; i < byteCharacters.length; i++) {
-                                byteNumbers[i] = byteCharacters.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            const blob = new Blob([byteArray], { type: 'image/jpeg' });
-                            return new File(
-                                [blob], 
-                                img.filename || `existing-image-${index}.jpg`, 
-                                { type: 'image/jpeg' }
-                            );
-                        }
-                        if (img.url) {
-                            const response = await fetch(img.url);
-                            const blob = await response.blob();
-                            return new File(
-                                [blob], 
-                                img.filename || `existing-image-${index}.jpg`, 
-                                { type: blob.type }
-                            );
-                        }
-                        return null;
-                    })
-                );
-                const allImageFiles = [
-                    ...existingFiles.filter(f => f !== null),
-                    ...(newsData.newImages || [])
-                ];
-    
-                console.log('Sending all images as files:', allImageFiles);
-    
-                await updateNewsById(
+                console.log("newsData : ", newsData)
+                await optimizedUpdateNewsById(
                     newsData.id,
                     newsData.title,
                     newsData.content,
-                    allImageFiles, // Теперь все элементы - File объекты
+                    newsData.newImages,
+                    newsData.removeImages,
                     localStorage.getItem('accessToken')
-                );
-                
+                )
+
                 console.log('News updated successfully');
             } else {
                 console.log("Created news images :", newsData.images)
@@ -104,7 +70,6 @@ function Home() {
                 );
                 console.log('News created successfully');
             }
-            
             await fetchNews(false);
             setIsModalOpen(false);
             setEditingNewsId(null);
@@ -115,7 +80,7 @@ function Home() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [createNews, updateNewsById, fetchNews]);
+    }, [createNews, optimizedUpdateNewsById, fetchNews]);
 
     const handleDeleteNews = useCallback(async (newsId) => {
         try {
@@ -240,7 +205,7 @@ function Home() {
                                     id={item.id}
                                     title={item.title}
                                     date={item.created_at}
-                                    image={item.images?.[0]?.base64 || null}
+                                    image={item.images?.[0]?.base64 || `http://localhost:8000${item.images?.[0]?.url}` || null}
                                     editMode={editMode && (user?.role === "admin" || user?.role === "root")}
                                     onDelete={handleDeleteNews}
                                     onEdit={handleEditNews}

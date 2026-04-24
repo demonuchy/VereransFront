@@ -23,7 +23,8 @@ function NewsCard({
   }) : '';
   
   // Проверяем, есть ли изображение
-  const imageSrc = image ? `data:image/jpeg;base64,${image}` : '/placeholder-image.jpg';
+  const imageSrc = image ? image : '/placeholder-image.jpg';
+  console.log("SRC:", imageSrc)
 
   const handleDelete = async (e) => {
     e.preventDefault();

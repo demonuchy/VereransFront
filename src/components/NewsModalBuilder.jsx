@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import useApi from "../hooks/useApi";
 
 function NewsModalBuilder({ 
@@ -12,13 +12,14 @@ function NewsModalBuilder({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
+  const [removeImages, setRemoveImages] = useState([])
   const [existingImages, setExistingImages] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   
   const fileInputRef = useRef(null);
-  const { getNewsById } = useApi();
+  const { streamGetNewsById } = useApi();
 
   // Загружаем данные новости при открытии модалки в режиме редактирования
   useEffect(() => {
@@ -28,7 +29,7 @@ function NewsModalBuilder({
         setError(null);
         
         try {
-          const response = await getNewsById(newsId);
+          const response = await streamGetNewsById(newsId);
           const newsData = response.data.news;
           
           setTitle(newsData.title || "");
@@ -48,7 +49,7 @@ function NewsModalBuilder({
     };
 
     loadNewsData();
-  }, [mode, newsId, isOpen, getNewsById]);
+  }, [mode, newsId, isOpen, streamGetNewsById]);
 
   // Сбрасываем форму при закрытии
   useEffect(() => {
@@ -57,6 +58,7 @@ function NewsModalBuilder({
         setTitle("");
         setContent("");
         setImages([]);
+        setRemoveImages([]);
         setExistingImages([]);
         setDragActive(false);
         setError(null);
@@ -90,7 +92,6 @@ function NewsModalBuilder({
 
   const handleFiles = (files) => {
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    
     imageFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -108,9 +109,19 @@ function NewsModalBuilder({
     setImages(prev => prev.filter(img => img.id !== imageId));
   };
 
-  const removeExistingImage = (index) => {
+  const removeExistingImage = useCallback((index) => {
+    if (!existingImages[index]) {
+      console.warn(`image with this index ${index} dase not exsist`)
+      return
+    };
+    const filenameToRemove = existingImages[index].filename;
+    setRemoveImages(prev => {
+        if (prev.includes(filenameToRemove)) return prev;
+        return [...prev, filenameToRemove];
+    });
     setExistingImages(prev => prev.filter((_, i) => i !== index));
-  };
+    console.log(existingImages);
+}, [existingImages]); 
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -126,6 +137,7 @@ function NewsModalBuilder({
       content: content.trim(),
       newImages: images.map(img => img.file),
       existingImages: existingImages,
+      removeImages : removeImages,
       mode,
       ...(mode === 'edit' && newsId && { id: newsId })
     };
@@ -213,12 +225,7 @@ function NewsModalBuilder({
                     {existingImages.map((img, index) => (
                       <div key={`existing-${index}`} className="image-preview existing">
                         <img 
-                          src={typeof img === 'string' 
-                            ? img 
-                            : img.base64 
-                              ? `data:image/jpeg;base64,${img.base64}`
-                              : img.url || '/placeholder-image.jpg'
-                          } 
+                          src={img?.base64 || `http://localhost:8000${img?.url}` || null} 
                           alt={`Existing ${index + 1}`}
                           onError={(e) => {
                             e.target.src = '/placeholder-image.jpg';

@@ -63,32 +63,24 @@ export const AuthProvider = ({ children }) => {
 
   const initAuth = useCallback(async () => {
     console.log("🔧 initAuth вызван, isDeviceIdLoading:", isDeviceIdLoading, "deviceId:", deviceId);
-    
     if (isDeviceIdLoading) {
       console.log("⏳ Ожидание загрузки Device ID...");
       return;
     }
-    
     if (!deviceId) {
       console.warn("❌ Device ID не получен");
       return;
     }
-    
     console.log("✅ Device ID готов:", deviceId);
-    
     const token = localStorage.getItem('accessToken');
     console.log("🔑 Токен в localStorage:", token ? "есть" : "нет");
-    
     if (!token) {
-      console.log("🔑 Токен не найден");
       return;
     }
-    
     try {
       console.log("📡 Отправка запроса getMe");
       const response = await getMe();
-      console.log('✅ getMe response:', response);
-      
+      console.log('✅ getMe response:', response); 
       if (response?.data?.user) {
         setUser(response.data.user);
         console.log("👤 Пользователь установлен:", response.data.user);
@@ -117,47 +109,37 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     console.log("🔐 Login вызван", { username, deviceId, isDeviceIdLoading });
-    
     if (isDeviceIdLoading) {
       console.error("❌ Device ID еще загружается");
       return { success: false, error: 'Device ID еще загружается, подождите...' };
     }
-    
     if (!deviceId) {
       console.error("❌ Device ID не получен");
       return { success: false, error: 'Device ID не получен' };
     }
-    
     console.log("📡 Отправка запроса на /auth/login");
-    
     try {
       const response = await apiLogin(username, password);
       console.log("📥 Ответ от сервера:", response);
-      
       if (response?.data?.access_token) {
         console.log("✅ Успешный вход, сохраняем токены");
         const accessToken = response.data.access_token;
         const refreshToken = response.data.refresh_token;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        
         console.log("📡 Получаем данные пользователя");
         const userResponse = await getMe();
         console.log("👤 Данные пользователя:", userResponse);
-        
         if (userResponse?.data?.user) {
           setUser(userResponse.data.user);
           console.log("✅ Пользователь установлен в состояние");
         }
-        
         return { success: true, data: response.data };
       }
-      
       if (response?.data?.detail) {
         console.warn("⚠️ Ошибка от сервера:", response.data.detail);
         return { success: false, error: response.data.detail };
       }
-      
       console.warn("⚠️ Неизвестная ошибка входа");
       return { success: false, error: 'Ошибка входа' };
     } catch (error) {
@@ -169,47 +151,37 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, password) => {
     console.log("📝 Register вызван", { username, deviceId, isDeviceIdLoading });
-    
     if (isDeviceIdLoading) {
       console.error("❌ Device ID еще загружается");
       return { success: false, error: 'Device ID еще загружается, подождите...' };
     }
-    
     if (!deviceId) {
       console.error("❌ Device ID не получен");
       return { success: false, error: 'Device ID не получен' };
     }
-    
     console.log("📡 Отправка запроса на /auth/register");
-    
     try {
       const response = await apiRegister(username, password);
       console.log("📥 Ответ от сервера:", response);
-      
       if (response?.data?.access_token) {
         console.log("✅ Успешная регистрация, сохраняем токены");
         const accessToken = response.data.access_token;
         const refreshToken = response.data.refresh_token;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        
         console.log("📡 Получаем данные пользователя");
         const userResponse = await getMe();
         console.log("👤 Данные пользователя:", userResponse);
-        
         if (userResponse?.data?.user) {
           setUser(userResponse.data.user);
           console.log("✅ Пользователь установлен в состояние");
         }
-        
         return { success: true, data: response.data };
       }
-      
       if (response?.data?.detail) {
         console.warn("⚠️ Ошибка от сервера:", response.data.detail);
         return { success: false, error: response.data.detail };
       }
-      
       console.warn("⚠️ Неизвестная ошибка регистрации");
       return { success: false, error: 'Ошибка регистрации' };
     } catch (error) {
@@ -275,6 +247,7 @@ export const AuthProvider = ({ children }) => {
     deviceReady: !isDeviceIdLoading && !!deviceId,
     deviceId,
     refreshDeviceId,
+    
   };
 
   return (

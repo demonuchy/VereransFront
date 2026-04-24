@@ -10,30 +10,52 @@ function NewsDetail() {
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageSources, setImageSources] = useState([]); // ← отдельный стейт для изображений
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [viewsCount, setViewsCount] = useState(0);
   const [comments, setComments] = useState([]);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
-  const { getNewsById, likeNews, leaveComment } = useApi();
+  const { streamGetNewsById, likeNews, leaveComment } = useApi();
   
   useEffect(() => {
     const fetchNewsData = async () => {
       try {
         setLoading(true);
-        const response = await getNewsById(id);
+        const response = await streamGetNewsById(id);
         console.log("API Response:", response);
         
         if (response?.data?.news) {
-          setNews(response.data.news);
-          setLikesCount(response.data.news.like || 0);
-          setViewsCount(response.data.news.views || 0);
-          setComments(response.data.news.comments || []);
+          const newsData = response.data.news;
+          setNews(newsData);
+          setLikesCount(newsData.like || 0);
+          setViewsCount(newsData.views || 0);
+          setComments(newsData.comments || []);
+          
+          // ← Обрабатываем изображения и сохраняем в отдельный стейт
+          const images = newsData.images || [];
+          const sources = images.map(img => {
+            // Если есть base64 - используем его
+            if (img.base64) {
+              return img.base64;
+            }
+            if (img.url) {
+              if (img.url.startsWith('http')) {
+                return img.url;
+              }
+              return `http://localhost:8000${img.url}`;
+            }
+            return null;
+          }).filter(Boolean);
+          
+          setImageSources(sources);
+          setCurrentImageIndex(0);
         }
       } catch (error) {
         console.error("Error fetching news:", error);
         setNews(null);
+        setImageSources([]);
       } finally {
         setLoading(false);
       }
@@ -42,19 +64,19 @@ function NewsDetail() {
     if (id) {
       fetchNewsData();
     }
-  }, [id, getNewsById]);
+  }, [id, streamGetNewsById]);
 
   const handleNextImage = () => {
-    if (!news?.images || news.images.length <= 1) return;
+    if (!imageSources || imageSources.length <= 1) return;
     setCurrentImageIndex((prevIndex) => 
-      prevIndex === news.images.length - 1 ? 0 : prevIndex + 1
+      prevIndex === imageSources.length - 1 ? 0 : prevIndex + 1
     );
   };
 
   const handlePrevImage = () => {
-    if (!news?.images || news.images.length <= 1) return;
+    if (!imageSources || imageSources.length <= 1) return;
     setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? news.images.length - 1 : prevIndex - 1
+      prevIndex === 0 ? imageSources.length - 1 : prevIndex - 1
     );
   };
 
@@ -92,7 +114,7 @@ function NewsDetail() {
           ...response?.data
         };
       setComments(prev => [newComment, ...prev]);
-      return true; // Возвращаем true при успехе
+      return true;
     } catch (error) {
       console.error("Error adding comment:", error);
       return false;
@@ -130,21 +152,8 @@ function NewsDetail() {
     }
   };
 
-  // Функция для безопасного получения текста
   const getContent = () => {
     return news?.body || news?.content || '';
-  };
-
-  // Функция для безопасного получения изображений
-  const getImages = () => {
-    if (!news?.images || !Array.isArray(news.images)) return [];
-    
-    return news.images.map(img => {
-      if (typeof img === 'string') return img;
-      if (img?.base64) return `data:image/jpeg;base64,${img.base64}`;
-      if (img?.url) return img.url;
-      return null;
-    }).filter(Boolean);
   };
 
   if (loading) {
@@ -168,20 +177,17 @@ function NewsDetail() {
   }
 
   const content = getContent();
-  const images = getImages();
   const formattedDate = formatDate(news.created_at || news.date);
 
   return (
     <div className="news-detail-page">
       <div className="news-detail-container">
-        {/* Кнопка назад сверху */}
         <div className="news-top-bar">
           <button onClick={handleBack} className="news-back-top-button">
             ← Назад к новостям
           </button>
         </div>
 
-        {/* Контент новости */}
         <article className="news-content-section">
           <div className="news-content-header">
             <h1 className="news-content-title">{news.title || 'Без названия'}</h1>
@@ -216,8 +222,8 @@ function NewsDetail() {
           </div>
         </article>
 
-        {/* Блок с изображениями под новостью */}
-        {images.length > 0 && (
+        {/* Блок с изображениями - используем imageSources */}
+        {imageSources.length > 0 && (
           <div className="news-images-section-bottom">
             <div className="news-images-header-bottom">
               <h3 className="news-images-title-bottom">Фотографии с мероприятия</h3>
@@ -226,17 +232,17 @@ function NewsDetail() {
             <div className="news-images-slider-bottom">
               <div className="news-slider-wrapper-bottom">
                 <img 
-                  src={images[currentImageIndex]} 
+                  src={imageSources[currentImageIndex]} 
                   alt={news.title || 'News image'} 
                   className="news-main-image-bottom"
                   onError={(e) => {
-                    console.log("Ошибка отображения изображения");
+                    console.log(`Ошибка загрузки изображения: ${imageSources[currentImageIndex]}`);
                     e.target.onerror = null;
                     e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400"><rect width="800" height="400" fill="%23f0f0f0"/><text x="400" y="200" font-family="Arial" font-size="24" fill="%23999" text-anchor="middle">Изображение недоступно</text></svg>';
                   }}
                 />
                 
-                {images.length > 1 && (
+                {imageSources.length > 1 && (
                   <>
                     <button 
                       onClick={handlePrevImage}
@@ -254,17 +260,16 @@ function NewsDetail() {
                     </button>
                     
                     <div className="news-slider-counter-bottom">
-                      {currentImageIndex + 1} / {images.length}
+                      {currentImageIndex + 1} / {imageSources.length}
                     </div>
                   </>
                 )}
               </div>
             </div>
             
-            {/* Галерея миниатюр под основным изображением */}
-            {images.length > 1 && (
+            {imageSources.length > 1 && (
               <div className="news-gallery-mini">
-                {images.map((_, index) => (
+                {imageSources.map((_, index) => (
                   <button
                     key={index}
                     className={`news-gallery-mini-thumb ${
@@ -280,7 +285,6 @@ function NewsDetail() {
           </div>
         )}
 
-        {/* Блок взаимодействия (лайки, просмотры, комментарии) */}
         <div className="news-interaction-section">
           <div className="news-stats-bar">
             <div className="news-stats-left">
@@ -310,7 +314,6 @@ function NewsDetail() {
         </div>
       </div>
       
-      {/* Модальное окно комментариев */}
       <CommentsModal
         isOpen={isCommentsModalOpen}
         onClose={closeCommentsModal}
