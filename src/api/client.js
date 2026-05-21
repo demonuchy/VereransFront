@@ -1,5 +1,5 @@
 // api/simpleClient.js
-const API_BASE_URL = 'http://localhost:8080/api/';
+const API_BASE_URL = '/api/';
 
 // Простая обертка над fetch
 const apiClient = async (url, options = {}, version = "v1") => {
@@ -76,13 +76,13 @@ const apiClient = async (url, options = {}, version = "v1") => {
       
       try {
         // Обновляем токен
-        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        const refreshResponse = await fetch(`${API_BASE_URL}v1/auth/refresh`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Device-Id': deviceId || 'unknown-device'
+            'X-Device-Id': deviceId || 'unknown-device',
+            'Authorization' : `Bearer ${refreshToken}`
           },
-          body: JSON.stringify({ refresh_token: refreshToken })
         });
         
         if (refreshResponse.ok) {
