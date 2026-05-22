@@ -12,8 +12,14 @@ const useApi = () => {
     
     return apiClient('/news/', { 
       method: 'POST', 
-      body: formData 
-    });
+      body: formData
+    }, 'v2');
+  }, []);
+
+  const searchNews = useCallback(async (title, limit = 20) => {
+    return apiClient(`/news/search?title=${encodeURIComponent(title)}&limit=${limit}`, {
+      method: 'GET'
+    }, 'v2');
   }, []);
 
   const getAllNews = useCallback(async () => {
@@ -35,7 +41,8 @@ const useApi = () => {
   const deleteNewsById = useCallback(async (newsId) => {
     return apiClient(
       `/news/${newsId}`, 
-      { method: 'DELETE' }
+      { method: 'DELETE' }, 
+      'v2'
     );
   }, []);
 
@@ -47,8 +54,8 @@ const useApi = () => {
     
     return apiClient(`/news/${newsId}`, { 
       method: 'PATCH', 
-      body: formData 
-    });
+      body: formData
+    }, 'v2');
   }, []);
 
   const optimizedUpdateNewsById = useCallback(async (newsId, title = NaN, body = NaN, uploadImages = NaN, removeImages = NaN) => {
@@ -112,6 +119,7 @@ const useApi = () => {
   }, []);
 
   return {
+    searchNews,
     createNews,
     getAllNews,
     streamGetAllNews,

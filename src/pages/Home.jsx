@@ -1,4 +1,4 @@
-// pages/Home.jsx
+// pages/Home.jsx   
 import { useCallback, useEffect, useState, useRef } from "react";
 import NewsCard from "../components/NewsCard";
 import NewsModalBuilder from "../components/NewsModalBuilder";
@@ -8,11 +8,13 @@ import { useAuth } from '../hooks/useAuthContext';
 
 function Home() {
     const [news, setNews] = useState(null);
+    const [originalNews, setOriginalNews] = useState(null); // Для хранения всех новостей
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('create');
     const [editingNewsId, setEditingNewsId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { createNews, getAllNews, streamGetAllNews, deleteNewsById, optimizedUpdateNewsById} = useApi();
+    const [isSearching, setIsSearching] = useState(false);
+    const { createNews, searchNews, streamGetAllNews, deleteNewsById, optimizedUpdateNewsById } = useApi();
     const [editMode, setEditMode] = useState(false);
     const { user } = useAuth();
     
@@ -21,12 +23,39 @@ function Home() {
     const fetchNews = useCallback(async () => {
         try {
             const response = await streamGetAllNews();
-            setNews(response.data.news);
+            const newsData = response.data.news;
+            setNews(newsData);
+            setOriginalNews(newsData); 
+            console.log(response)
         } catch (err) {
             console.error('Error fetching news:', err);
             setNews([]);
+            setOriginalNews([]);
         } 
     }, [streamGetAllNews]);
+
+    // Функция поиска
+    const handleSearch = useCallback(async (searchQuery) => {
+        if (!searchQuery || searchQuery.trim() === '') {
+            // Если поиск пустой, показываем все новости
+            setNews(originalNews);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const response = await searchNews(searchQuery, 50);
+            // Извлекаем новости из ответа
+            const searchResults = response?.data?.news || [];
+            console.log(response)
+            setNews(searchResults);
+        } catch (error) {
+            console.error('Search error:', error);
+            setNews([]);
+        } finally {
+            setIsSearching(false);
+        }
+    }, [searchNews, originalNews]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -37,7 +66,8 @@ function Home() {
         };
         
         loadInitialData();
-        console.log(user)
+        console.log(user);
+        console.log("news", news)
     }, [fetchNews, user]);
 
     const doubleClickHandler = useCallback((e) => {
@@ -49,7 +79,7 @@ function Home() {
         try {
             setIsSubmitting(true);
             if (newsData.mode === 'edit') {
-                console.log("newsData : ", newsData)
+                console.log("newsData : ", newsData);
                 await optimizedUpdateNewsById(
                     newsData.id,
                     newsData.title,
@@ -57,11 +87,10 @@ function Home() {
                     newsData.newImages,
                     newsData.removeImages,
                     localStorage.getItem('accessToken')
-                )
-
+                );
                 console.log('News updated successfully');
             } else {
-                console.log("Created news images :", newsData.images)
+                console.log("Created news images :", newsData.images);
                 await createNews(
                     newsData.title,
                     newsData.content,
@@ -86,6 +115,7 @@ function Home() {
         try {
             await deleteNewsById(newsId, localStorage.getItem('accessToken'));
             setNews(prevNews => prevNews.filter(item => item.id !== newsId));
+            setOriginalNews(prevNews => prevNews.filter(item => item.id !== newsId));
         } catch (error) {
             console.error('Error deleting news:', error);
             await fetchNews(false);
@@ -111,7 +141,7 @@ function Home() {
         setIsModalOpen(true);
     }, []);
 
-    if (news?.length === 0) {
+    if (news?.length === 0 && !isSearching) {
         return (
             <div className="home-page">
                 <section className="home-hero">
@@ -123,6 +153,7 @@ function Home() {
                                 Будьте в курсе последних событий и новостей сообщества ветеранов
                             </p>
                         </div>
+                        <SearchBar onSearch={handleSearch} isLoading={isSearching} />
                     </div>
                 </section>
 
@@ -182,7 +213,7 @@ function Home() {
                             </button>
                         )}
                     </div>
-                    <SearchBar />
+                    <SearchBar onSearch={handleSearch} isLoading={isSearching} />
                 </div>
             </section>
 
@@ -205,7 +236,7 @@ function Home() {
                                     id={item.id}
                                     title={item.title}
                                     date={item.created_at}
-                                    image={item.images?.[0]?.base64 || `http://localhost:8000${item.images?.[0]?.url}` || null}
+                                    image={item.preview_image?.base64 || `http://localhost:8000${item.preview_image?.url}`|| null}
                                     editMode={editMode && (user?.role === "admin" || user?.role === "root")}
                                     onDelete={handleDeleteNews}
                                     onEdit={handleEditNews}

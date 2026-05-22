@@ -1,8 +1,40 @@
-import React, { useState } from 'react';
+// components/SearchBar.jsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 
-const SearchBar = () => {
+const SearchBar = ({ onChange, onSearch, isLoading = false }) => {
   const [searchValue, setSearchValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+
+  // Дебаунсированный поиск
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      if (onChange) {
+        onChange(value);
+      }
+      if (onSearch) {
+        onSearch(value);
+      }
+    }, 500),
+    [onChange, onSearch]
+  );
+
+  useEffect(() => {
+    debouncedSearch(searchValue);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchValue, debouncedSearch]);
+
+  const handleClear = () => {
+    setSearchValue('');
+    if (onChange) {
+      onChange('');
+    }
+    if (onSearch) {
+      onSearch('');
+    }
+  };
 
   return (
     <div className="search-container">
@@ -35,11 +67,29 @@ const SearchBar = () => {
             onBlur={() => setIsFocused(false)}
           />
           
+          {/* Индикатор загрузки */}
+          {isLoading && (
+            <div className="search-loading">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8">
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 12 12"
+                    to="360 12 12"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              </svg>
+            </div>
+          )}
+          
           {/* Кнопка очистки (появляется когда есть текст) */}
-          {searchValue && (
+          {searchValue && !isLoading && (
             <button 
               className="clear-button"
-              onClick={() => setSearchValue('')}
+              onClick={handleClear}
               aria-label="Очистить поиск"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

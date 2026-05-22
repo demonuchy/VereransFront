@@ -1,5 +1,5 @@
 // api/simpleClient.js
-const API_BASE_URL = '/api/';
+const API_BASE_URL = 'http://localhost:8080/api/';
 
 // Простая обертка над fetch
 const apiClient = async (url, options = {}, version = "v1") => {
