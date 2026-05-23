@@ -39,6 +39,11 @@ const apiClient = async (url, options = {}, version = "v1") => {
       error.status = 401;
       throw error;
     }
+
+    if (response.status === 204) {
+      console.log("✅ Получен 204 No Content (успешное удаление)");
+      return { success: true, status: 204, data: null };
+    }
     
     // Для других ошибок
     if (!response.ok) {

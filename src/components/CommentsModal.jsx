@@ -1,28 +1,48 @@
 // src/components/CommentsModal.jsx
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Comment from './Comment';
+import useApi from '../hooks/useApi';
 
 const CommentsModal = ({ 
   isOpen, 
   onClose, 
-  comments, 
+  comments,
+  setComments,
   onSubmitComment,
-  isSubmitting 
+  isSubmitting,
+  newsId,
 }) => {
-  const [commentText, setCommentText] = useState('');
+  const { deleteComment } = useApi();
+  const [commentText, setCommentText] = useState('');  // переименовал, чтобы не конфликтовать с пропсом comments
+
+  // Обновляем локальные комментарии при изменении пропса
+  useEffect(() => {
+    if (comments && Array.isArray(comments)) {
+      setComments(comments);
+    }
+  }, [comments, setComments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
     
     const success = await onSubmitComment(commentText);
-    console.log("я вернул:", success)
     if (success) {
-        console.log("Я пытаюсть очистить поле со всех сил ....")
       setCommentText(''); // Очищаем поле только после успешной отправки
     }
-    console.log("мне пох")
   };
+
+  const handleDeleteComment = useCallback(async (commentId) => {
+    try {
+      console.log("Commentid : ", commentId, "News id", newsId)
+      await deleteComment(newsId, commentId);
+      setComments(prevComments => 
+          prevComments.filter(comment => comment.id !== commentId)
+        );
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  }, [deleteComment, newsId, setComments]);
 
   const formatRelativeTime = (dateString) => {
     if (!dateString) return '';
@@ -36,11 +56,13 @@ const CommentsModal = ({
       if (diffInSeconds < 60) return 'только что';
       if (diffInSeconds < 3600) {
         const minutes = Math.floor(diffInSeconds / 60);
-        return `${minutes} ${minutes === 1 ? 'минуту' : minutes < 5 ? 'минуты' : 'минут'} назад`;
+        const minutesText = getMinutesDeclension(minutes);
+        return `${minutes} ${minutesText} назад`;
       }
       if (diffInSeconds < 86400) {
         const hours = Math.floor(diffInSeconds / 3600);
-        return `${hours} ${hours === 1 ? 'час' : hours < 5 ? 'часа' : 'часов'} назад`;
+        const hoursText = getHoursDeclension(hours);
+        return `${hours} ${hoursText} назад`;
       }
       
       return date.toLocaleDateString('ru-RU', {
@@ -51,6 +73,20 @@ const CommentsModal = ({
     } catch (error) {
       return '';
     }
+  };
+
+  // Функция для склонения минут
+  const getMinutesDeclension = (minutes) => {
+    if (minutes === 1) return 'минуту';
+    if (minutes >= 2 && minutes <= 4) return 'минуты';
+    return 'минут';
+  };
+
+  // Функция для склонения часов
+  const getHoursDeclension = (hours) => {
+    if (hours === 1) return 'час';
+    if (hours >= 2 && hours <= 4) return 'часа';
+    return 'часов';
   };
 
   if (!isOpen) return null;
@@ -99,10 +135,13 @@ const CommentsModal = ({
                 <span>Будьте первым, кто оставит комментарий!</span>
               </div>
             ) : (
-              comments.map((comment, index) => (
+              comments.map((comment) => (
                 <Comment 
-                  key={comment.id || index} 
-                  comment={comment} 
+                  key={comment.id}
+                  id={comment.id}
+                  newsId={newsId}
+                  comment={comment}
+                  onDelete={handleDeleteComment}
                   formatRelativeTime={formatRelativeTime}
                 />
               ))

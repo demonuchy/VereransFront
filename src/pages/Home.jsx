@@ -67,7 +67,6 @@ function Home() {
         
         loadInitialData();
         console.log(user);
-        console.log("news", news)
     }, [fetchNews, user]);
 
     const doubleClickHandler = useCallback((e) => {

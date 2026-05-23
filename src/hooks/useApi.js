@@ -90,9 +90,10 @@ const useApi = () => {
   }, []);
 
   const deleteComment = useCallback(async (newsId, commentId) => {
+    console.log(newsId, commentId)
     return apiClient(
       `/news/${newsId}/comment/${commentId}`, 
-      { method: 'POST' }
+      { method: 'DELETE' }
     );
   }, []);
 

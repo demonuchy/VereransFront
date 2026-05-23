@@ -17,7 +17,7 @@ function NewsDetail() {
   const [comments, setComments] = useState([]);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
-  const { streamGetNewsById, likeNews, leaveComment } = useApi();
+  const { streamGetNewsById, likeNews, leaveComment} = useApi();
   
   useEffect(() => {
     const fetchNewsData = async () => {
@@ -79,6 +79,8 @@ function NewsDetail() {
       prevIndex === 0 ? imageSources.length - 1 : prevIndex - 1
     );
   };
+
+  
 
   const handleBack = () => {
     navigate('/');
@@ -318,8 +320,10 @@ function NewsDetail() {
         isOpen={isCommentsModalOpen}
         onClose={closeCommentsModal}
         comments={comments}
+        newsId={id}
         onSubmitComment={handleCommentSubmit}
         isSubmitting={isSubmittingComment}
+        setComments={setComments}
       />
       
       <button 
