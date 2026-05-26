@@ -7,7 +7,7 @@ import SubmitButton from '../components/SubmitButton';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -65,17 +65,12 @@ const Register = () => {
     setApiError('');
 
     try {
-      const response = await register(formData.email, formData.password);
-      console.log('Register response:', response);
-      
-      if (response?.data?.access_token) {
-        navigate('/');
-      } else {
-        setApiError('Неверный ответ от сервера');
+      const response = await signUp(formData.email, formData.password);  
+      if  (response.success) {
+        navigate('/verify-code');
       }
     } catch (error) {
       console.error('Register error:', error);
-      
       if (error.message === 'Failed to fetch') {
         setApiError('Ошибка подключения к серверу. Проверьте подключение.');
       } else if (error.message.includes('409')) {

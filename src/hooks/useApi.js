@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import apiClient from '../api/client';
 
 const useApi = () => {
-  // Методы API
   const createNews = useCallback(async (title, body, images = []) => {
     const formData = new FormData();
     formData.append('title', title);
@@ -104,6 +103,23 @@ const useApi = () => {
     });
   }, []);
 
+
+  const signUpWithEmailVerify = useCallback(async (username, password) => {
+    return apiClient('/auth/sign-up', {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+    }, 'v2');
+  }, []);
+
+  const verifyCode = useCallback(async (code, verificationToken) => {
+    return apiClient(`/auth/verify-code?code=${code}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${verificationToken}`
+      }
+    }, 'v2');
+  }, []);
+
   const login = useCallback(async (username, password) => {
     return apiClient('/auth/login', {
       method: 'POST',
@@ -133,6 +149,8 @@ const useApi = () => {
     leaveComment,
     deleteComment,
     register,
+    signUpWithEmailVerify,
+    verifyCode,
     login,
     getMe,
     logout,

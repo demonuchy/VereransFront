@@ -20,7 +20,7 @@ const apiClient = async (url, options = {}, version = "v1") => {
   }
   
   // Если есть токен - добавляем Authorization
-  if (token) {
+  if (token && !('Authorization' in  headers)) {
     console.log("Добавляем токен");
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -112,14 +112,9 @@ const apiClient = async (url, options = {}, version = "v1") => {
             return await makeRequest(newHeaders);
           }
         }
-        
-        // Если не удалось обновить токен
         console.log("❌ Не удалось обновить токен");
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        
-        // ВАЖНО: НЕ делаем window.location.href = '/login'
-        // Возвращаем ошибку, чтобы компонент сам решил что делать
         throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
         
       } catch (refreshError) {

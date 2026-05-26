@@ -13,6 +13,7 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Register = lazy(() => import('./pages/Register'));
 const Login = lazy(() => import('./pages/Login'));
+const VerefyCode = lazy(() => import('./pages/VerefyCode'))
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -31,7 +32,8 @@ function App() {
 
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/sign-up" element={<Register />} />
+              <Route path='/verify-code' element={<VerefyCode/>}/>
             </Route>
           </Routes>
         </Suspense>
