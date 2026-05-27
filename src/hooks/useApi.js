@@ -112,8 +112,18 @@ const useApi = () => {
   }, []);
 
   const verifyCode = useCallback(async (code, verificationToken) => {
-    return apiClient(`/auth/verify-code?code=${code}`, {
+    return apiClient(`/auth/code/verify?code=${code}`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${verificationToken}`
+      }
+    }, 'v2');
+  }, []);
+
+
+  const getNewCode = useCallback(async (verificationToken) => {
+    return apiClient(`/auth/code`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${verificationToken}`
       }
@@ -151,6 +161,7 @@ const useApi = () => {
     register,
     signUpWithEmailVerify,
     verifyCode,
+    getNewCode,
     login,
     getMe,
     logout,

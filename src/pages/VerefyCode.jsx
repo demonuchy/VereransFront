@@ -108,14 +108,18 @@ const VerificationCode = ({
       setError('Пожалуйста, введите полный код из 6 цифр');
       return;
     }
-
     setIsVerifying(true);
     setError('');
     
     try {
-      const response = await verifyCode(code.join(''))
+      const response = await verifyCode(verificationCode)
       if (response.success) {
         navigate('/')
+      } else {
+        setError('Неверный код подтверждения')
+        setCode(['', '', '', '', '', '']);
+        setActiveIndex(0);
+        inputRefs.current[0]?.focus();
       }
     } catch (err) {
       setError(err.message || 'Неверный код подтверждения');

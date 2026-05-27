@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
     register: apiRegister, 
     signUpWithEmailVerify : apiSignUp,
     verifyCode : apiVerifyCode,
+    getNewCode : apiGetNewCode,
     getMe, 
     logout: apiLogout,
   } = useApi();
@@ -324,6 +325,23 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+  const getNewCode = async () => {
+    const verificationToken = localStorage.getItem("verificationToken")
+    if (!verificationToken){
+        console.error("❌ Нет verification token");
+        return { success: false, error: 'Сессия верификации истекла. Пожалуйста, зарегистрируйтесь заново.' };
+      }
+    try{
+      const response = await apiGetNewCode(verificationToken)
+      if (response?.data?.verification_token){
+        const verificationToken = response?.data?.verification_token;
+        localStorage.setItem("verificationToken", verificationToken);
+      }
+    } catch(error) {
+      console.error("Ошибка обновленя кода", error)
+    }
+  }
+
   const logout = async () => {
     console.log("🚪 Logout called");
     setIsLoading(true);
@@ -382,6 +400,7 @@ export const AuthProvider = ({ children }) => {
     deviceId,
     signUp,
     verifyCode,
+    getNewCode,
     refreshDeviceId,
   };
 
